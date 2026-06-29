@@ -1,0 +1,85 @@
+@{
+    var asset = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    ViewData["Title"] = "الشؤون الإدارية";
+    string prevElec  = ViewBag.PrevElectricity ?? "";
+    string prevWater = ViewBag.PrevWater       ?? "";
+    string prevGas   = ViewBag.PrevGas         ?? "";
+    string prevOther = ViewBag.PrevOther       ?? "";
+    string prevNotes = ViewBag.PrevNotes       ?? "";
+}
+<div class="row justify-content-center">
+<div class="col-md-9">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header text-white fw-bold" style="background:#27ae60;">
+            <i class="bi bi-lightning-charge me-2"></i>الشؤون الإدارية - المرافق - @asset.AssetName
+        </div>
+        <div class="card-body">
+            <form asp-action="AdminAffairs" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="assetId" value="@asset.Id"/>
+                <h6 class="fw-bold border-bottom pb-2 mb-3">
+                    <i class="bi bi-plug me-2 text-success"></i>حالة المرافق
+                </h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-lightning text-warning me-1"></i>كهرباء
+                        </label>
+                        <select name="electricity" class="form-select">
+                            <option value="">-- اختر الحالة --</option>
+                            @if (prevElec=="Connected - Active")   {<option value="Connected - Active" selected>متصل - نشط</option>} else {<option value="Connected - Active">متصل - نشط</option>}
+                            @if (prevElec=="Connected - Inactive") {<option value="Connected - Inactive" selected>متصل - غير نشط</option>} else {<option value="Connected - Inactive">متصل - غير نشط</option>}
+                            @if (prevElec=="Not Connected")        {<option value="Not Connected" selected>غير متصل</option>} else {<option value="Not Connected">غير متصل</option>}
+                            @if (prevElec=="Needs Upgrade")        {<option value="Needs Upgrade" selected>يحتاج ترقية</option>} else {<option value="Needs Upgrade">يحتاج ترقية</option>}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-droplet text-info me-1"></i>مياه
+                        </label>
+                        <select name="water" class="form-select">
+                            <option value="">-- اختر الحالة --</option>
+                            @if (prevWater=="Connected - Active")   {<option value="Connected - Active" selected>متصل - نشط</option>} else {<option value="Connected - Active">متصل - نشط</option>}
+                            @if (prevWater=="Connected - Inactive") {<option value="Connected - Inactive" selected>متصل - غير نشط</option>} else {<option value="Connected - Inactive">متصل - غير نشط</option>}
+                            @if (prevWater=="Not Connected")        {<option value="Not Connected" selected>غير متصل</option>} else {<option value="Not Connected">غير متصل</option>}
+                            @if (prevWater=="Well/Private")         {<option value="Well/Private" selected>بئر / خاص</option>} else {<option value="Well/Private">بئر / خاص</option>}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-fire text-danger me-1"></i>غاز
+                        </label>
+                        <select name="gas" class="form-select">
+                            <option value="">-- اختر الحالة --</option>
+                            @if (prevGas=="Natural Gas - Connected") {<option value="Natural Gas - Connected" selected>غاز طبيعي - متصل</option>} else {<option value="Natural Gas - Connected">غاز طبيعي - متصل</option>}
+                            @if (prevGas=="Cylinder Gas")            {<option value="Cylinder Gas" selected>أسطوانة غاز</option>} else {<option value="Cylinder Gas">أسطوانة غاز</option>}
+                            @if (prevGas=="Not Connected")           {<option value="Not Connected" selected>غير متصل</option>} else {<option value="Not Connected">غير متصل</option>}
+                            @if (prevGas=="Not Required")            {<option value="Not Required" selected>غير مطلوب</option>} else {<option value="Not Required">غير مطلوب</option>}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-wifi text-primary me-1"></i>خدمات أخرى
+                        </label>
+                        <input type="text" name="other" class="form-control"
+                               value="@prevOther"
+                               placeholder="مثل: الإنترنت، الصرف الصحي..."/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">ملاحظات إضافية</label>
+                        <textarea name="notes" class="form-control" rows="3"
+                                  placeholder="أي مشاكل في المرافق أو ملاحظات خاصة...">@prevNotes</textarea>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn text-white fw-bold flex-grow-1" style="background:#27ae60;">
+                        <i class="bi bi-check-circle me-2"></i>حفظ
+                    </button>
+                    <a asp-controller="Asset" asp-action="Details" asp-route-id="@asset.Id"
+                       class="btn btn-outline-secondary">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>

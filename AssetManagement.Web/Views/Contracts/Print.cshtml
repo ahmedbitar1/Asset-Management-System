@@ -1,0 +1,145 @@
+@{
+    Layout = null;
+    var asset    = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    var contract = (AssetManagement.Domain.Entities.Contract)ViewBag.Contract;
+    bool isSale  = contract.ContractType == AssetManagement.Domain.Enums.ContractType.Sale;
+    bool isComm  = !isSale && (asset.AssetName.Contains("محل") || asset.AssetName.Contains("مكتب") || asset.AssetName.Contains("تجار") || asset.AssetType == AssetManagement.Domain.Enums.AssetType.Both);
+    string today = DateTime.Now.ToString("yyyy/MM/dd");
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="UTF-8"/>
+<title>@contract.ContractNumber</title>
+<style>
+@@media print { @@page{margin:2cm} .no-print{display:none} }
+body{font-family:'Traditional Arabic',Arial;font-size:14px;color:#000;direction:rtl;margin:30px}
+.hdr{text-align:center;border-bottom:3px double #000;padding-bottom:15px;margin-bottom:20px}
+.hdr h2{font-size:18px;font-weight:bold;margin:4px 0}
+.ttl{text-align:center;font-size:22px;font-weight:bold;margin:20px 0;text-decoration:underline}
+.box{border:1px solid #000;padding:12px;margin:15px 0}
+.box table{width:100%} .box td{padding:6px;font-size:14px}
+.box td:first-child{font-weight:bold;width:180px}
+.bnd{font-weight:bold;font-size:15px;margin-top:14px;margin-bottom:4px}
+p.c{text-align:justify;line-height:2;margin:6px 0}
+.sigs{margin-top:60px} .sigs table{width:100%} .sigs td{text-align:center;padding:10px;width:50%}
+.sig-line{border-top:1px solid #000;margin-top:70px;padding-top:5px}
+.btn-print{position:fixed;top:20px;left:20px;background:#1a56db;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:15px;cursor:pointer}
+</style></head><body>
+<div class="no-print">
+  <button class="btn-print" onclick="window.print()">🖨️ طباعة</button>
+  &nbsp;&nbsp;
+  <button class="btn-print" style="background:#6c757d;left:130px" onclick="window.history.back()">← رجوع</button>
+</div>
+<div class="hdr">
+  <h2>شركة بيت الخبرة للاستثمار الاقتصادي (تكنو إنفستمنت)</h2>
+  <p>شركة مساهمة مصرية – منشأة وفقاً للقانون رقم 159 لسنة 1981</p>
+  <p>رقم العقد: <strong>@contract.ContractNumber</strong> &nbsp;|&nbsp; تاريخ: <strong>@today</strong></p>
+</div>
+@if (isSale) {
+<div class="ttl">عقد بيع نهائي</div>
+<div class="box"><table>
+<tr><td>البائع:</td><td>شركة بيت الخبرة للاستثمار الاقتصادي</td></tr>
+<tr><td>المشتري:</td><td>@contract.PartyName</td></tr>
+<tr><td>رقم هوية المشتري:</td><td>@contract.PartyIdNumber</td></tr>
+<tr><td>هاتف المشتري:</td><td>@contract.PartyPhone</td></tr>
+<tr><td>الوحدة المبيعة:</td><td>@asset.AssetName – @asset.Location – @asset.City</td></tr>
+<tr><td>المساحة:</td><td>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "-")</td></tr>
+<tr><td>رقم صك الملكية:</td><td>@asset.DeedNumber</td></tr>
+<tr><td>الثمن الإجمالي:</td><td><strong>@contract.Amount.ToString("N0") جنيه مصري</strong></td></tr>
+</table></div>
+<p class="c">إنه في يوم <strong>@today</strong> قد تم الاتفاق والتراضي وتحرر بين كل من:</p>
+<p class="c"><strong>أولاً (طرف أول – بائع):</strong> شركة بيت الخبرة للاستثمار الاقتصادي (تكنو إنفستمنت).</p>
+<p class="c"><strong>ثانياً (طرف ثانٍ – مشترٍ):</strong> السيد/ة <strong>@contract.PartyName</strong> – رقم الهوية: <strong>@contract.PartyIdNumber</strong> – هاتف: <strong>@contract.PartyPhone</strong></p>
+<div class="bnd">(تمهيد)</div>
+<p class="c">يمتلك الطرف الأول الوحدة العقارية <strong>@asset.AssetName</strong> الكائنة بـ <strong>@asset.Location – @asset.City</strong> المساحة <strong>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "")</strong>. ورغبةً من الطرف الثاني في شرائها وبعد أن أقر الطرفان بأهليتهما للتعاقد اتفقا على إبرام هذا العقد.</p>
+<div class="bnd">البند الأول</div>
+<p class="c">يعتبر التمهيد السابق جزءاً لا يتجزأ من هذا العقد ومكملاً لجميع بنوده وشروطه.</p>
+<div class="bnd">البند الثاني (موضوع العقد)</div>
+<p class="c">باع وتنازل الطرف الأول للطرف الثاني الوحدة العقارية: <strong>@asset.AssetName</strong> الكائنة في <strong>@asset.Location – @asset.City</strong> بمساحة <strong>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "")</strong>.</p>
+<div class="bnd">البند الثالث (الثمن وطريقة السداد)</div>
+<p class="c">تم هذا البيع نظير ثمن إجمالي قدره <strong>@contract.Amount.ToString("N0") جنيه مصري</strong>. وقد سدد الطرف الثاني كامل الثمن وأصبح العقد قابلاً للتسجيل بالشهر العقاري.</p>
+<div class="bnd">البند الرابع (المعاينة)</div>
+<p class="c">يُقر الطرف الثاني بأنه عاين الوحدة المعاينة التامة النافية لكل جهالة شرعاً وقانوناً وأنها حازت رضاه وقبوله التام.</p>
+<div class="bnd">البند الخامس (التسليم)</div>
+<p class="c">يقوم الطرف الأول بتسليم الوحدة المبيعة للطرف الثاني عقب التوقيع بموجب محضر استلام، شريطة سداد كامل الالتزامات المالية.</p>
+<div class="bnd">البند السادس (توصيل المرافق)</div>
+<p class="c">تم توصيل كافة المرافق (كهرباء، مياه، غاز) ويلتزم الطرف الأول بتحرير خطاب التنازل عن عداد الكهرباء للطرف الثاني.</p>
+<div class="bnd">البند السابع (مصاريف التسجيل)</div>
+<p class="c">يتحمل الطرف الثاني جميع مصاريف تسجيل عقد البيع ورسوم الشهر العقاري وضريبة التصرفات العقارية.</p>
+<div class="bnd">البند الثامن (الاختصاص القضائي)</div>
+<p class="c">تختص محكمة شمال القاهرة الابتدائية بأي نزاع ينشأ بخصوص تفسير أو تنفيذ هذا العقد.</p>
+} else if (!isComm) {
+<div class="ttl">عقد إيجار وحدة سكنية</div>
+<p style="text-align:center;font-size:12px">وفقاً للقانون 4 لسنة 1996 والقانون 137 لسنة 2006</p>
+<div class="box"><table>
+<tr><td>المستأجر:</td><td>@contract.PartyName</td></tr>
+<tr><td>رقم الهوية:</td><td>@contract.PartyIdNumber</td></tr>
+<tr><td>الهاتف:</td><td>@contract.PartyPhone</td></tr>
+<tr><td>الوحدة:</td><td>@asset.AssetName – @asset.Location – @asset.City</td></tr>
+<tr><td>المساحة:</td><td>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "-")</td></tr>
+<tr><td>الإيجار الشهري:</td><td><strong>@contract.Amount.ToString("N0") جنيه مصري</strong></td></tr>
+<tr><td>مدة العقد:</td><td>من @contract.StartDate?.ToString("yyyy/MM/dd") إلى @contract.EndDate?.ToString("yyyy/MM/dd")</td></tr>
+</table></div>
+<p class="c">إنه في يوم <strong>@today</strong> تم تحرير هذا العقد بحضور:</p>
+<p class="c"><strong>أولاً (مؤجر):</strong> شركة بيت الخبرة للاستثمار الاقتصادي (تكنو إنفستمنت).</p>
+<p class="c"><strong>ثانياً (مستأجر):</strong> السيد/ة <strong>@contract.PartyName</strong> – رقم الهوية: <strong>@contract.PartyIdNumber</strong> – هاتف: <strong>@contract.PartyPhone</strong></p>
+<div class="bnd">البند الأول (موضوع العقد)</div>
+<p class="c">أجّر الطرف الأول للطرف الثاني الوحدة السكنية <strong>@asset.AssetName</strong> بـ <strong>@asset.Location – @asset.City</strong> مساحتها <strong>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "")</strong> للسكن فقط، ولا يجوز تغيير الاستعمال.</p>
+<div class="bnd">البند الثاني (القيمة الإيجارية)</div>
+<p class="c">القيمة الإيجارية الشهرية <strong>@contract.Amount.ToString("N0") جنيه مصري</strong> شاملة الضريبة العقارية. يُسدد من اليوم الأول حتى الخامس من كل شهر. غرامة التأخر 2.5% يومياً.</p>
+<div class="bnd">البند الثالث (مدة العقد)</div>
+<p class="c">مدة العقد من <strong>@contract.StartDate?.ToString("yyyy/MM/dd")</strong> حتى <strong>@contract.EndDate?.ToString("yyyy/MM/dd")</strong> غير قابلة للتجديد.</p>
+<div class="bnd">البند الرابع (التأمين)</div>
+<p class="c">يلتزم المستأجر بسداد مبلغ التأمين عند التوقيع ولا يُرد إلا عند انتهاء العلاقة الإيجارية وتسليم الوحدة على أحسن حال.</p>
+<div class="bnd">البند الخامس (المعاينة)</div>
+<p class="c">يُقر المستأجر بمعاينة الشقة المعاينة التامة وقبولها بالحالة التي عليها.</p>
+<div class="bnd">البند السادس (الإيجار من الباطن)</div>
+<p class="c">لا يجوز للمستأجر تأجير الشقة من الباطن أو التنازل عنها دون إذن كتابي من المؤجر.</p>
+<div class="bnd">البند السابع (إنهاء التعاقد)</div>
+<p class="c">العقد محدد المدة وينتهي بنهايتها. في حال الإنهاء المبكر يُخطر المؤجر قبل 4 أشهر مع مصادرة التأمين.</p>
+<div class="bnd">البند الثامن (الاختصاص القضائي)</div>
+<p class="c">تختص محكمة شمال القاهرة بالفصل في أي نزاع ينشأ عن تنفيذ هذا العقد.</p>
+} else {
+<div class="ttl">عقد إيجار وحدة تجارية</div>
+<p style="text-align:center;font-size:12px">وفقاً للقانون 4 لسنة 1996 والقانون 137 لسنة 2006</p>
+<div class="box"><table>
+<tr><td>المستأجر:</td><td>@contract.PartyName</td></tr>
+<tr><td>رقم الهوية:</td><td>@contract.PartyIdNumber</td></tr>
+<tr><td>الهاتف:</td><td>@contract.PartyPhone</td></tr>
+<tr><td>الوحدة التجارية:</td><td>@asset.AssetName – @asset.Location – @asset.City</td></tr>
+<tr><td>المساحة:</td><td>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "-")</td></tr>
+<tr><td>الإيجار الشهري:</td><td><strong>@contract.Amount.ToString("N0") جنيه مصري</strong></td></tr>
+<tr><td>مدة العقد:</td><td>من @contract.StartDate?.ToString("yyyy/MM/dd") إلى @contract.EndDate?.ToString("yyyy/MM/dd")</td></tr>
+</table></div>
+<p class="c">إنه في يوم <strong>@today</strong> تحرر هذا العقد بين:</p>
+<p class="c"><strong>أولاً (مؤجر):</strong> شركة بيت الخبرة للاستثمار الاقتصادي (تكنو إنفستمنت).</p>
+<p class="c"><strong>ثانياً (مستأجر):</strong> السيد/ة <strong>@contract.PartyName</strong> – رقم الهوية: <strong>@contract.PartyIdNumber</strong> – هاتف: <strong>@contract.PartyPhone</strong></p>
+<div class="bnd">البند الأول (موضوع العقد)</div>
+<p class="c">أجّر الطرف الأول للطرف الثاني الوحدة التجارية <strong>@asset.AssetName</strong> بـ <strong>@asset.Location – @asset.City</strong> مساحتها <strong>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "")</strong>. لا يجوز تغيير الاستعمال إلا بموافقة كتابية صريحة.</p>
+<div class="bnd">البند الثاني (القيمة الإيجارية)</div>
+<p class="c">القيمة الإيجارية الشهرية <strong>@contract.Amount.ToString("N0") جنيه مصري</strong>. يُسدد من اليوم 15 حتى 19 من كل شهر. غرامة التأخر 2.5% يومياً.</p>
+<div class="bnd">البند الثالث (مدة العقد)</div>
+<p class="c">مدة العقد من <strong>@contract.StartDate?.ToString("yyyy/MM/dd")</strong> حتى <strong>@contract.EndDate?.ToString("yyyy/MM/dd")</strong> غير قابلة للتجديد.</p>
+<div class="bnd">البند الرابع (التأمين)</div>
+<p class="c">يلتزم المستأجر بسداد مبلغ التأمين ولا يُرد إلا عند انتهاء العلاقة وتسليم الوحدة على أحسن حال وسداد جميع الاستهلاكات.</p>
+<div class="bnd">البند الخامس (المعاينة)</div>
+<p class="c">يُقر المستأجر بمعاينة الوحدة التجارية وقبولها بالحالة التي عليها.</p>
+<div class="bnd">البند السادس (الإيجار من الباطن)</div>
+<p class="c">لا يجوز للمستأجر تأجير الوحدة من الباطن أو التنازل عنها دون إذن كتابي.</p>
+<div class="bnd">البند السابع (الالتزامات)</div>
+<p class="c">يلتزم المستأجر بأجهزة مكافحة الحريق والتراخيص اللازمة وعدم وضع لافتات خارج الأماكن المخصصة.</p>
+<div class="bnd">البند الثامن (إنهاء التعاقد)</div>
+<p class="c">العقد محدد المدة. الإنهاء المبكر يستوجب إخطار 4 أشهر ومصادرة التأمين.</p>
+<div class="bnd">البند التاسع (الاختصاص القضائي)</div>
+<p class="c">تختص محكمة شمال القاهرة بالفصل في أي نزاع ينشأ عن تنفيذ هذا العقد.</p>
+}
+<div class="sigs"><table><tr>
+<td><strong>الطرف الأول (المؤجر/البائع)</strong>
+<div class="sig-line">شركة بيت الخبرة<br/>التوقيع: _______________</div></td>
+<td><strong>@(isSale ? "المشتري" : "المستأجر")</strong>
+<div class="sig-line">@contract.PartyName<br/>التوقيع: _______________</div></td>
+</tr></table></div>
+<div style="text-align:center;margin-top:30px;font-size:12px;color:#888;border-top:1px solid #ccc;padding-top:10px">
+رقم العقد: @contract.ContractNumber | تاريخ: @today | @asset.AssetName
+</div>
+</body></html>

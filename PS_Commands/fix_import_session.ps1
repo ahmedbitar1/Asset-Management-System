@@ -1,0 +1,31 @@
+$OutputEncoding = [System.Text.Encoding]::UTF8
+Write-Host "Fixing AssetImport - using Session instead of TempData..." -ForegroundColor Cyan
+
+# Fix controller
+$b = [System.Convert]::FromBase64String("dXNpbmcgQXNzZXRNYW5hZ2VtZW50LkFwcGxpY2F0aW9uLkludGVyZmFjZXM7CnVzaW5nIEFzc2V0TWFuYWdlbWVudC5BcHBsaWNhdGlvbi5WaWV3TW9kZWxzOwp1c2luZyBNaWNyb3NvZnQuQXNwTmV0Q29yZS5BdXRob3JpemF0aW9uOwp1c2luZyBNaWNyb3NvZnQuQXNwTmV0Q29yZS5NdmM7CnVzaW5nIFN5c3RlbS5TZWN1cml0eS5DbGFpbXM7CnVzaW5nIFN5c3RlbS5UZXh0Lkpzb247CgpuYW1lc3BhY2UgQXNzZXRNYW5hZ2VtZW50LldlYi5Db250cm9sbGVycwp7CiAgICBbQXV0aG9yaXplKFJvbGVzID0gIkxlZ2FsLFN1cGVyQWRtaW4iKV0KICAgIHB1YmxpYyBjbGFzcyBBc3NldEltcG9ydENvbnRyb2xsZXIgOiBDb250cm9sbGVyCiAgICB7CiAgICAgICAgcHJpdmF0ZSByZWFkb25seSBJRXhjZWxJbXBvcnRTZXJ2aWNlIF9pbXBvcnRTZXJ2aWNlOwogICAgICAgIHB1YmxpYyBBc3NldEltcG9ydENvbnRyb2xsZXIoSUV4Y2VsSW1wb3J0U2VydmljZSBzdmMpID0+IF9pbXBvcnRTZXJ2aWNlID0gc3ZjOwoKICAgICAgICBbSHR0cEdldF0KICAgICAgICBwdWJsaWMgSUFjdGlvblJlc3VsdCBJbmRleCgpID0+IFZpZXcoKTsKCiAgICAgICAgW0h0dHBQb3N0XVtWYWxpZGF0ZUFudGlGb3JnZXJ5VG9rZW5dCiAgICAgICAgcHVibGljIGFzeW5jIFRhc2s8SUFjdGlvblJlc3VsdD4gVXBsb2FkKElGb3JtRmlsZSBmaWxlKQogICAgICAgIHsKICAgICAgICAgICAgaWYgKGZpbGUgPT0gbnVsbCB8fCBmaWxlLkxlbmd0aCA9PSAwKQogICAgICAgICAgICB7IFRlbXBEYXRhWyJFcnJvciJdID0gItmK2LHYrNmJINin2K7YqtmK2KfYsSDZhdmE2YEiOyByZXR1cm4gUmVkaXJlY3RUb0FjdGlvbigiSW5kZXgiKTsgfQogICAgICAgICAgICBpZiAoIVBhdGguR2V0RXh0ZW5zaW9uKGZpbGUuRmlsZU5hbWUpLkVxdWFscygiLnhsc3giLCBTdHJpbmdDb21wYXJpc29uLk9yZGluYWxJZ25vcmVDYXNlKSkKICAgICAgICAgICAgeyBUZW1wRGF0YVsiRXJyb3IiXSA9ICLZitmP2YLYqNmEINmF2YTZgdin2KogLnhsc3gg2YHZgti3IjsgcmV0dXJuIFJlZGlyZWN0VG9BY3Rpb24oIkluZGV4Iik7IH0KCiAgICAgICAgICAgIHZhciB1c2VySWQgPSBVc2VyLkZpbmRGaXJzdFZhbHVlKENsYWltVHlwZXMuTmFtZUlkZW50aWZpZXIpITsKICAgICAgICAgICAgdXNpbmcgdmFyIHN0cmVhbSA9IGZpbGUuT3BlblJlYWRTdHJlYW0oKTsKICAgICAgICAgICAgdmFyIHJlc3VsdCA9IGF3YWl0IF9pbXBvcnRTZXJ2aWNlLkltcG9ydEFzeW5jKHN0cmVhbSwgdXNlcklkKTsKCiAgICAgICAgICAgIC8vIFN0b3JlIGluIFNlc3Npb24gKG5vdCBUZW1wRGF0YS9jb29raWUpIHRvIGF2b2lkIEhUVFAgNDMxCiAgICAgICAgICAgIEh0dHBDb250ZXh0LlNlc3Npb24uU2V0U3RyaW5nKCJJbXBvcnRSZXN1bHQiLCBKc29uU2VyaWFsaXplci5TZXJpYWxpemUocmVzdWx0KSk7CiAgICAgICAgICAgIHJldHVybiBSZWRpcmVjdFRvQWN0aW9uKCJSZXN1bHQiKTsKICAgICAgICB9CgogICAgICAgIFtIdHRwR2V0XQogICAgICAgIHB1YmxpYyBJQWN0aW9uUmVzdWx0IFJlc3VsdCgpCiAgICAgICAgewogICAgICAgICAgICB2YXIganNvbiA9IEh0dHBDb250ZXh0LlNlc3Npb24uR2V0U3RyaW5nKCJJbXBvcnRSZXN1bHQiKTsKICAgICAgICAgICAgaWYgKHN0cmluZy5Jc051bGxPckVtcHR5KGpzb24pKQogICAgICAgICAgICAgICAgcmV0dXJuIFJlZGlyZWN0VG9BY3Rpb24oIkluZGV4Iik7CgogICAgICAgICAgICBIdHRwQ29udGV4dC5TZXNzaW9uLlJlbW92ZSgiSW1wb3J0UmVzdWx0Iik7CiAgICAgICAgICAgIHZhciByZXN1bHQgPSBKc29uU2VyaWFsaXplci5EZXNlcmlhbGl6ZTxJbXBvcnRSZXN1bHRWaWV3TW9kZWw+KGpzb24pOwogICAgICAgICAgICByZXR1cm4gVmlldyhyZXN1bHQpOwogICAgICAgIH0KICAgIH0KfQo=")
+[System.IO.File]::WriteAllBytes("C:\Users\ahmed.essamm\Desktop\AssetManagement\AssetManagement.Web\Controllers\AssetImportController.cs", $b)
+Write-Host "  OK: AssetImportController.cs" -ForegroundColor Green
+
+
+# Add Session before AddControllersWithViews
+$p = "$env:USERPROFILE\Desktop\AssetManagement\AssetManagement.Web\Program.cs"
+$c = [System.IO.File]::ReadAllText($p, [System.Text.Encoding]::UTF8)
+
+if ($c -notmatch "AddSession") {
+    $c = $c.Replace(
+        "builder.Services.AddControllersWithViews();",
+        "builder.Services.AddDistributedMemoryCache();`nbuilder.Services.AddSession(o => { o.IdleTimeout = TimeSpan.FromMinutes(30); o.Cookie.HttpOnly = true; });`nbuilder.Services.AddControllersWithViews();"
+    )
+    $c = $c.Replace(
+        "app.UseStaticFiles();",
+        "app.UseStaticFiles();`napp.UseSession();"
+    )
+    [System.IO.File]::WriteAllText($p, $c, [System.Text.Encoding]::UTF8)
+    Write-Host "  OK: Session added to Program.cs" -ForegroundColor Green
+} else {
+    Write-Host "  OK: Session already in Program.cs" -ForegroundColor Yellow
+}
+
+
+dotnet build "$env:USERPROFILE\Desktop\AssetManagement" 2>&1 | Select-Object -Last 3
+Write-Host "Done!" -ForegroundColor Yellow

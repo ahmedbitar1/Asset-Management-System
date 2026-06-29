@@ -1,0 +1,525 @@
+﻿@model AssetManagement.Application.ViewModels.AssetDetailViewModel
+@using AssetManagement.Domain.Enums
+@using AssetManagement.Domain.Entities
+@{
+    ViewData["Title"] = "تفاصيل الأصل";
+    var a = Model.Asset;
+    var roles = (IList<string>)(ViewBag.Roles ?? new List<string>());
+    bool isSuperAdmin   = roles.Contains("SuperAdmin");
+    bool isMarketing    = roles.Contains("Marketing")    || isSuperAdmin;
+    bool isEngineering  = roles.Contains("Engineering")  || isSuperAdmin;
+    bool isAdminAffairs = roles.Contains("AdminAffairs") || isSuperAdmin;
+    bool isValuator     = roles.Contains("Marketing") || roles.Contains("Finance") || roles.Contains("Legal") || isSuperAdmin;
+    bool isSales        = roles.Contains("Marketing")   || isSuperAdmin;
+    bool isLegal        = roles.Contains("Legal")        || isSuperAdmin;
+    bool isFinance      = roles.Contains("Finance")      || isSuperAdmin;
+    bool isTreasury     = roles.Contains("Treasury")     || isSuperAdmin;
+    string stageName    = AssetManagement.Application.ViewModels.AssetCardViewModel.StageNames
+        .GetValueOrDefault(a.CurrentStage, a.CurrentStage.ToString());
+
+    string ActionAr(string action) => action switch {
+        "Approved"     => "موافقة",
+        "Rejected"     => "رفض",
+        "Imported"     => "استيراد",
+        "AutoAdvanced" => "تلقائي",
+        "RentalRequest"=> "طلب إيجار",
+        "SaleRequest"  => "طلب بيع",
+        "Valued"       => "تقييم",
+        "Collected"    => "تحصيل",
+        _              => action
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h5 class="fw-bold mb-1">@a.AssetName</h5>
+        <code class="text-primary">@a.AssetCode</code>
+        @if (!string.IsNullOrEmpty(a.PropertyType))
+        {<span class="badge bg-secondary ms-2">@a.PropertyType</span>}
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <span class="badge bg-warning text-dark px-3 py-2">@stageName</span>
+        <span class="badge px-3 py-2
+            @(a.Status==AssetStatus.Rejected?"bg-danger":
+              a.Status==AssetStatus.Active?"bg-success":
+              a.Status==AssetStatus.Sold?"bg-primary":
+              a.Status==AssetStatus.Rented?"bg-info":"bg-secondary")">
+            @(a.Status==AssetStatus.Active?"نشط":
+              a.Status==AssetStatus.Sold?"تم البيع":
+              a.Status==AssetStatus.Rented?"تم التأجير":
+              a.Status==AssetStatus.Rejected?"مرفوض":"معلق")
+        </span>
+        @if (isMarketing)
+        {
+        <a asp-controller="Images" asp-action="Index" asp-route-assetId="@a.Id"
+           class="btn btn-sm btn-outline-info">
+            <i class="bi bi-images me-1"></i>الصور
+        </a>
+        }
+        @if (roles.Contains("Legal") || isSuperAdmin)
+        {
+        <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-pencil-square me-1"></i>تعديل
+        </a>
+        }
+        @if (isSuperAdmin)
+        {
+        <button type="button" class="btn btn-sm btn-danger"
+                onclick="confirmDelete(@a.Id,'@a.AssetName.Replace("'","\'")' )">
+            <i class="bi bi-trash me-1"></i>حذف
+        </button>
+        <form id="deleteForm_@a.Id" asp-action="Delete" asp-route-id="@a.Id"
+              method="post" class="d-none">@Html.AntiForgeryToken()</form>
+        }
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-right me-1"></i>رجوع
+        </a>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center px-4 py-4">
+                <i class="bi bi-trash3-fill text-danger fs-1 mb-3 d-block"></i>
+                <h5 class="fw-bold mb-2">حذف الأصل؟</h5>
+                <p class="text-muted">أنت على وشك حذف <strong id="deleteAssetName" class="text-danger"></strong></p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-3 pb-4">
+                <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger px-4 rounded-pill">نعم، احذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+<div class="col-md-7">
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold">
+            <i class="bi bi-info-circle me-2 text-primary"></i>بيانات العقار
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-6"><div class="text-muted small">الاسم</div><div class="fw-semibold">@a.AssetName</div></div>
+                <div class="col-6"><div class="text-muted small">الكود</div><code class="text-primary">@a.AssetCode</code></div>
+                @if (!string.IsNullOrEmpty(a.PropertyType))
+                {<div class="col-6"><div class="text-muted small">نوع العقار</div><div>@a.PropertyType</div></div>}
+                @if (!string.IsNullOrEmpty(a.OwnerCompany))
+                {<div class="col-6"><div class="text-muted small">الشركة المالكة</div><div>@a.OwnerCompany</div></div>}
+                <div class="col-6"><div class="text-muted small">الموقع</div><div>@a.City @a.District @a.Location</div></div>
+                @if (!string.IsNullOrEmpty(a.OccupancyStatus))
+                {<div class="col-6"><div class="text-muted small">الموقف</div>
+                    <span class="badge @(a.OccupancyStatus=="مستغل"?"bg-success":a.OccupancyStatus=="مؤجر"?"bg-info":"bg-secondary")">@a.OccupancyStatus</span></div>}
+                <div class="col-6">
+                    <div class="text-muted small">المساحة</div>
+                    @if (a.LandArea.HasValue || a.BuildingArea.HasValue)
+                    {
+                        if (a.LandArea.HasValue)    {<div class="small">أرض: @a.LandArea.Value.ToString("N0") م²</div>}
+                        if (a.BuildingArea.HasValue) {<div class="small">مباني: @a.BuildingArea.Value.ToString("N0") م²</div>}
+                    }
+                    else if (a.Area.HasValue) {<div>@a.Area.Value.ToString("N0") @a.AreaUnit</div>}
+                    else {<div>—</div>}
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small">نوع التصرف</div>
+                    <span class="badge @(a.AssetType==AssetType.Sale?"bg-success":a.AssetType==AssetType.Rent?"bg-info":"bg-warning text-dark")">
+                        @(a.AssetType==AssetType.Sale?"بيع":a.AssetType==AssetType.Rent?"إيجار":"بيع وإيجار")
+                    </span>
+                </div>
+                @{
+                    var lastSaleR   = a.SaleRequests.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+                    var lastRentalR = a.RentalRequests.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+                    decimal? displayPrice = a.PurchasePrice;
+                    string priceLabel = "\u0633\u0639\u0631 \u0627\u0644\u0634\u0631\u0627\u0621";
+                    if (lastSaleR != null) { displayPrice = lastSaleR.OfferedPrice; priceLabel = "\u0633\u0639\u0631 \u0627\u0644\u0628\u064a\u0639"; }
+                    else if (lastRentalR != null) { displayPrice = lastRentalR.ProposedRent; priceLabel = "\u0627\u0644\u0625\u064a\u062c\u0627\u0631 \u0627\u0644\u0634\u0647\u0631\u064a"; }
+                }
+                <div class="col-6">
+                    <div class="text-muted small">@priceLabel</div>
+                    <div class="fw-semibold text-success">@(displayPrice.HasValue?"EGP "+displayPrice.Value.ToString("N0"):"\u2014")</div>
+                </div>
+                @if (!string.IsNullOrEmpty(a.DeedNumber) || !string.IsNullOrEmpty(a.DeedType))
+                {<div class="col-12 col-md-6">
+                    <div class="text-muted small">سند الملكية</div>
+                    <div>@a.DeedType @(string.IsNullOrEmpty(a.DeedNumber)?"":" — "+a.DeedNumber)</div>
+                </div>}
+                @if (!string.IsNullOrEmpty(a.Notes))
+                {<div class="col-12"><div class="text-muted small">ملاحظات</div>
+                    <div class="p-2 bg-light rounded small">@a.Notes</div></div>}
+                @if (!string.IsNullOrEmpty(a.PreviousOffers))
+                {<div class="col-12"><div class="text-muted small">العروض السابقة</div>
+                    <div class="p-2 bg-light rounded small text-muted">@a.PreviousOffers</div></div>}
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Valuations.Any())
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-warning bg-opacity-10 fw-bold">
+            <i class="bi bi-bar-chart me-2 text-warning"></i>التقييمات
+        </div>
+        <div class="card-body p-2">
+            <div class="row g-2">
+                @foreach (var v in Model.Valuations)
+                {
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <div class="text-muted small mb-1">@v.TypeLabel</div>
+                        <div class="fw-bold fs-5 text-@v.TypeColor">@v.Value.ToString("N0")</div>
+                        <div class="text-muted" style="font-size:11px;">EGP</div>
+                        @if (!string.IsNullOrEmpty(v.Comments))
+                        {<div class="text-muted" style="font-size:11px;" title="@v.Comments">@v.Comments</div>}
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (a.RentalRequests.Any())
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-info bg-opacity-10 fw-bold d-flex justify-content-between">
+            <span><i class="bi bi-house-door me-2"></i>طلبات الإيجار (@a.RentalRequests.Count)</span>
+            @if (a.CurrentStage == 4 && (isSales || isMarketing))
+            {<a asp-controller="Requests" asp-action="PrintRequest" asp-route-assetId="@a.Id"
+               class="btn btn-sm btn-outline-secondary" target="_blank">
+                <i class="bi bi-printer me-1"></i>طباعة
+            </a>}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light"><tr><th>المستأجر</th><th>الإيجار/شهر</th><th>المدة</th><th>التأمين</th><th>الزيادة</th><th>البداية</th></tr></thead>
+                <tbody>
+                @foreach (var r in a.RentalRequests.OrderByDescending(x => x.CreatedAt))
+                {<tr>
+                    <td class="fw-semibold">@r.TenantName</td>
+                    <td class="text-success">@r.ProposedRent.ToString("N0")</td>
+                    <td>@(r.ContractDurationYears.HasValue?r.ContractDurationYears+"سنة":r.RentDurationMonths+"شهر")</td>
+                    <td>@(r.SecurityDeposit.HasValue?r.SecurityDeposit.Value.ToString("N0"):"—")</td>
+                    <td>@(r.AnnualIncrease.HasValue?r.AnnualIncrease.Value+"%":"—")</td>
+                    <td class="text-muted small">@r.StartDate?.ToString("yyyy/MM/dd")</td>
+                </tr>}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+
+    @if (a.SaleRequests.Any())
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-success bg-opacity-10 fw-bold">
+            <i class="bi bi-cash-coin me-2"></i>طلبات البيع (@a.SaleRequests.Count)
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light"><tr><th>المشتري</th><th>السعر</th><th>الدفع</th><th>التاريخ</th></tr></thead>
+                <tbody>
+                @foreach (var r in a.SaleRequests.OrderByDescending(x => x.CreatedAt))
+                {<tr>
+                    <td class="fw-semibold">@r.BuyerName</td>
+                    <td class="text-success">@r.OfferedPrice.ToString("N0")</td>
+                    <td>@r.PaymentMethod</td>
+                    <td class="text-muted small">@r.CreatedAt.ToString("yyyy/MM/dd")</td>
+                </tr>}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+
+    @if (a.Contracts.Any())
+    {
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary bg-opacity-10 fw-bold">
+            <i class="bi bi-file-earmark-text me-2"></i>العقود (@a.Contracts.Count)
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light"><tr><th>الرقم</th><th>النوع</th><th>الطرف</th><th>المبلغ</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var c in a.Contracts.OrderByDescending(x => x.CreatedAt))
+                {<tr>
+                    <td><code class="small">@c.ContractNumber</code></td>
+                    <td><span class="badge @(c.ContractType==ContractType.Rent?"bg-info":"bg-success")">
+                        @(c.ContractType==ContractType.Rent?"إيجار":"بيع")
+                    </span></td>
+                    <td>@c.PartyName</td>
+                    <td class="fw-semibold">@c.Amount.ToString("N0")</td>
+                    <td><a asp-controller="Contracts" asp-action="DownloadWord" asp-route-contractId="@c.Id"
+                           class="btn btn-sm btn-success"><i class="bi bi-file-word"></i></a></td>
+                </tr>}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+
+</div>
+<div class="col-md-5">
+
+    @if (isMarketing || isEngineering || isAdminAffairs)
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold">
+            <i class="bi bi-diagram-3 me-2 text-info"></i>الأقسام الاختيارية
+            <span class="badge bg-info float-end small">متاح دائماً</span>
+        </div>
+        <div class="card-body p-2">
+            @if (isMarketing)
+            {<a asp-controller="OptionalStages" asp-action="Marketing" asp-route-assetId="@a.Id"
+               class="btn btn-sm btn-outline-warning w-100 mb-2 text-start">
+                <i class="bi bi-megaphone me-2"></i>التسويق
+                @if (a.OptionalStageStatuses.Any(o=>o.StageKey=="2a"&&o.IsCompleted))
+                {<span class="badge bg-success float-end">مكتمل</span>}
+                else {<span class="badge bg-secondary float-end">معلق</span>}
+            </a>}
+            @if (isEngineering)
+            {<a asp-controller="OptionalStages" asp-action="Engineering" asp-route-assetId="@a.Id"
+               class="btn btn-sm btn-outline-primary w-100 mb-2 text-start">
+                <i class="bi bi-rulers me-2"></i>الهندسة
+                @if (a.OptionalStageStatuses.Any(o=>o.StageKey=="2b"&&o.IsCompleted))
+                {<span class="badge bg-success float-end">مكتمل</span>}
+                else {<span class="badge bg-secondary float-end">معلق</span>}
+            </a>}
+            @if (isAdminAffairs)
+            {<a asp-controller="OptionalStages" asp-action="AdminAffairs" asp-route-assetId="@a.Id"
+               class="btn btn-sm btn-outline-success w-100 mb-2 text-start">
+                <i class="bi bi-lightning-charge me-2"></i>الشؤون الإدارية
+                @if (a.OptionalStageStatuses.Any(o=>o.StageKey=="2c"&&o.IsCompleted))
+                {<span class="badge bg-success float-end">مكتمل</span>}
+                else {<span class="badge bg-secondary float-end">معلق</span>}
+            </a>}
+        </div>
+    </div>
+    }
+
+    @if (Model.IsStage3 && isValuator)
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-warning bg-opacity-10 fw-bold">
+            <i class="bi bi-bar-chart me-2 text-warning"></i>مرحلة التقييم
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">أدخل التقييمات الثلاثة وحدد نوع التصرف</p>
+            <a asp-controller="Valuation" asp-action="Evaluate" asp-route-assetId="@a.Id"
+               class="btn btn-warning w-100 fw-bold">
+                <i class="bi bi-calculator me-2"></i>
+                @(Model.Valuations.Any() ? "تعديل التقييمات" : "بدء التقييم")
+            </a>
+        </div>
+    </div>
+    }
+
+    @if (Model.IsStage4 && (isSales || isMarketing))
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-success bg-opacity-10 fw-bold">
+            <i class="bi bi-plus-circle me-2"></i>طلب البيع / الإيجار
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-2 flex-wrap">
+                @if (a.AssetType == AssetType.Rent || a.AssetType == AssetType.Both)
+                {<a asp-controller="Requests" asp-action="CreateRental" asp-route-assetId="@a.Id"
+                   class="btn btn-info text-white flex-grow-1">
+                    <i class="bi bi-house-door me-1"></i>طلب إيجار
+                </a>}
+                @if (a.AssetType == AssetType.Sale || a.AssetType == AssetType.Both)
+                {<a asp-controller="Requests" asp-action="CreateSale" asp-route-assetId="@a.Id"
+                   class="btn btn-success flex-grow-1">
+                    <i class="bi bi-cash-coin me-1"></i>طلب بيع
+                </a>}
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (a.CurrentStage == 6 && isLegal && !a.Contracts.Any())
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-primary bg-opacity-10 fw-bold">
+            <i class="bi bi-file-earmark-text me-2"></i>إنشاء العقد
+        </div>
+        <div class="card-body">
+            <a asp-controller="Contracts" asp-action="Create" asp-route-assetId="@a.Id"
+               class="btn btn-primary w-100 fw-bold">
+                <i class="bi bi-file-earmark-plus me-2"></i>إنشاء العقد
+            </a>
+        </div>
+    </div>
+    }
+
+    @if (a.CurrentStage == 7 && isFinance)
+    {
+    <div class="card border-0 shadow-sm mb-3" style="border:2px solid #0dcaf0 !important;">
+        <div class="card-header fw-bold text-white bg-info">
+            <i class="bi bi-eye-fill me-2"></i>مراجعة العقد — المالية
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">راجع بنود العقد ثم اعتمده أو ارفضه</p>
+            <a asp-controller="Finance" asp-action="ReviewContract" asp-route-assetId="@a.Id"
+               class="btn btn-info text-white w-100 fw-bold">
+                <i class="bi bi-eye me-2"></i>مراجعة واعتماد العقد
+            </a>
+        </div>
+    </div>
+    }
+
+    @if (a.CurrentStage == 8 && isLegal)
+    {
+    <div class="card border-0 shadow-sm mb-3" style="border:2px solid #ffc107 !important;">
+        <div class="card-header fw-bold text-dark bg-warning">
+            <i class="bi bi-upload me-2"></i>رفع العقد الموقّع — القانونية
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">ارفع نسخة العقد بعد التوقيع (PDF أو Word)</p>
+            <a asp-controller="MarketingUpload" asp-action="UploadSigned" asp-route-assetId="@a.Id"
+               class="btn btn-warning w-100 fw-bold">
+                <i class="bi bi-cloud-upload me-2"></i>رفع العقد الموقّع
+            </a>
+        </div>
+    </div>
+    }
+
+    @if (a.CurrentStage == 9 && isTreasury)
+    {
+    <div class="card border-0 shadow-sm mb-3" style="border:2px solid #1e3a5f !important;">
+        <div class="card-header fw-bold text-white" style="background:#1e3a5f;">
+            <i class="bi bi-bank me-2"></i>تحصيل الخزنة
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">الخطوة الأخيرة — تسجيل استلام الدفعة</p>
+            <a asp-controller="Treasury" asp-action="Collect" asp-route-assetId="@a.Id"
+               class="btn w-100 fw-bold text-white" style="background:#1e3a5f;">
+                <i class="bi bi-check-circle me-2"></i>تسجيل التحصيل
+            </a>
+        </div>
+    </div>
+    }
+
+    @if (a.Contracts.Any())
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-primary bg-opacity-10 fw-bold">
+            <i class="bi bi-file-earmark-word me-2"></i>@a.Contracts.First().ContractNumber
+        </div>
+        <div class="card-body">
+            <a asp-controller="Contracts" asp-action="DownloadWord"
+               asp-route-contractId="@a.Contracts.OrderByDescending(c=>c.CreatedAt).First().Id"
+               class="btn btn-success w-100 fw-bold">
+                <i class="bi bi-download me-2"></i>تحميل العقد Word
+            </a>
+        </div>
+    </div>
+    }
+
+    @if (Model.CanAdvance || Model.CanReject)
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-primary bg-opacity-10 fw-bold">
+            <i class="bi bi-gear me-2"></i>إجراء سير العمل
+        </div>
+        <div class="card-body">
+            @if (Model.CanAdvance)
+            {
+            <form asp-action="Advance" asp-controller="Asset" method="post" class="mb-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@a.Id"/>
+                <textarea name="notes" class="form-control form-control-sm mb-2" rows="2"
+                          placeholder="ملاحظات (اختياري)"></textarea>
+                <button type="submit" class="btn btn-success w-100 fw-semibold">
+                    <i class="bi bi-arrow-right-circle me-2"></i>
+                    التقدم إلى: @AssetManagement.Application.ViewModels.AssetCardViewModel.StageNames.GetValueOrDefault(a.CurrentStage + 1, "مكتمل")
+                </button>
+            </form>
+            }
+            @if (Model.CanReject)
+            {
+            <form asp-action="Reject" asp-controller="Asset" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@a.Id"/>
+                <textarea name="reason" class="form-control form-control-sm border-danger mb-2"
+                          rows="2" placeholder="سبب الرفض..." required></textarea>
+                <button type="submit" class="btn btn-danger w-100">
+                    <i class="bi bi-x-circle me-2"></i>رفض
+                </button>
+            </form>
+            }
+        </div>
+    </div>
+    }
+
+    @if (StageDefinition.IsLastStage(a.CurrentStage))
+    {
+    <div class="card border-0 shadow-sm mb-3 bg-success text-white">
+        <div class="card-body text-center py-4">
+            <i class="bi bi-check-circle-fill fs-1"></i>
+            <h5 class="mt-2 mb-1">اكتمل سير العمل!</h5>
+            <p class="mb-0 opacity-75">@(a.Status==AssetStatus.Sold?"تم البيع":a.Status==AssetStatus.Rented?"تم التأجير":"مكتمل")</p>
+        </div>
+    </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light fw-bold">
+            <i class="bi bi-clock-history me-2"></i>سجل المراحل
+        </div>
+        <div class="card-body p-2" style="max-height:350px;overflow-y:auto;">
+            @if (!Model.History.Any())
+            {<p class="text-center text-muted small py-3">لا يوجد سجل بعد</p>}
+            @foreach (var h in Model.History)
+            {
+            <div class="d-flex gap-2 mb-3 border-bottom pb-2">
+                <div class="mt-1">
+                    <i class="bi @(h.Action=="Rejected"?"bi-x-circle-fill text-danger":
+                                   h.Action is "Imported" or "AutoAdvanced"?"bi-box-arrow-in-down text-secondary":
+                                   "bi-check-circle-fill text-success") fs-6"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold small">@h.FromName &#8594; @h.ToName</div>
+                    @if (!string.IsNullOrEmpty(h.Notes))
+                    {<div class="text-muted" style="font-size:12px;">@h.Notes</div>}
+                    <div class="text-muted" style="font-size:11px;">@h.PerformedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                </div>
+                <span class="badge @(h.Action=="Rejected"?"bg-danger":
+                                    h.Action is "Imported" or "AutoAdvanced"?"bg-secondary":"bg-success") small">
+                    @ActionAr(h.Action ?? "")
+                </span>
+            </div>
+            }
+        </div>
+    </div>
+
+</div>
+</div>
+
+@section Scripts {
+    <script>
+        var deleteFormId = null;
+
+        function confirmDelete(id, name) {
+            deleteFormId = id;
+            document.getElementById('deleteAssetName').textContent = name;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+            if (deleteFormId) {
+                document.getElementById('deleteForm_' + deleteFormId).submit();
+            }
+        });
+
+        @if (TempData["AutoPrint"] != null)
+        {
+                <text>
+                window.open('/Requests/PrintRequest?assetId=@TempData["AutoPrint"]', '_blank');
+                </text>
+        }
+    </script>
+}
+

@@ -1,0 +1,47 @@
+@using AssetManagement.Application.Helpers
+
+<!-- مثال عرض المراحل الاختيارية في FullDetails - ضع هذا في مكان عرض OptionalStageDetails -->
+@foreach (var detail in optionalDetails)
+{
+    <div class="card border-0 shadow-sm mb-2">
+        <div class="card-header small fw-bold bg-light">
+            @(detail.StageKey == "2a" ? "التسويق" :
+              detail.StageKey == "2b" ? "الهندسة" :
+              detail.StageKey == "2c" ? "الشؤون الإدارية" : detail.StageKey)
+        </div>
+        <div class="card-body small">
+            @if (!string.IsNullOrEmpty(detail.Details))
+            {
+                var pairs = detail.Details.Split('|');
+                foreach (var pair in pairs)
+                {
+                    var kv = pair.Split(':', 2);
+                    if (kv.Length == 2)
+                    {
+                        var key = kv[0].Trim();
+                        var val = kv[1].Trim();
+                        <div>
+                            <span class="text-muted">
+                                @(key switch {
+                                    "buildingType" => "نوع المبنى",
+                                    "area"         => "المساحة",
+                                    "structure"    => "تفاصيل الهيكل",
+                                    "electricity"  => "الكهرباء",
+                                    "water"        => "المياه",
+                                    "gas"          => "الغاز",
+                                    "other"        => "خدمات أخرى",
+                                    "adText"       => "نص الإعلان",
+                                    "notes"        => "ملاحظات",
+                                    _              => key
+                                }):
+                            </span>
+                            <strong>@OptionalStageTranslator.TranslateAny(val)</strong>
+                        </div>
+                    }
+                }
+            }
+            @if (!string.IsNullOrEmpty(detail.Notes))
+            {<div class="text-muted mt-1">ملاحظة: @detail.Notes</div>}
+        </div>
+    </div>
+}

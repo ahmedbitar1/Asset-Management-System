@@ -1,0 +1,8 @@
+@model AssetManagement.Web.Models.ErrorViewModel
+@{ ViewData["Title"] = "Error"; }
+<h1>Error</h1>
+<p>An error occurred.</p>
+@if (Model?.ShowRequestId == true)
+{
+    <p>Request ID: @Model.RequestId</p>
+}

@@ -1,0 +1,127 @@
+@model AssetManagement.Application.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "الرئيسية";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">مرحباً، @Model.UserName</h4>
+        <div class="d-flex gap-2 flex-wrap">
+            @foreach (var r in Model.Roles)
+            {<span class="badge bg-primary">@r</span>}
+        </div>
+    </div>
+    @if (Model.Roles.Contains("Legal") || Model.Roles.Contains("SuperAdmin"))
+    {
+    <a asp-controller="AssetImport" asp-action="Index" class="btn btn-success">
+        <i class="bi bi-file-earmark-excel me-1"></i>استيراد الأصول
+    </a>
+    }
+</div>
+
+@if (Model.Roles.Contains("SuperAdmin") || Model.Roles.Contains("Finance"))
+{
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-2">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-primary">@Model.TotalAssets</div>
+                <div class="small text-muted">الإجمالي</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card border-0 shadow-sm text-center h-100 bg-success bg-opacity-10">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-success">@Model.ActiveAssets</div>
+                <div class="small text-muted">نشطة</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card border-0 shadow-sm text-center h-100 bg-primary bg-opacity-10">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-primary">@Model.SoldAssets</div>
+                <div class="small text-muted">مباعة</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card border-0 shadow-sm text-center h-100 bg-info bg-opacity-10">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-info">@Model.RentedAssets</div>
+                <div class="small text-muted">مؤجرة</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card border-0 shadow-sm text-center h-100 bg-danger bg-opacity-10">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-danger">@Model.RejectedAssets</div>
+                <div class="small text-muted">مرفوضة</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card border-0 shadow-sm text-center h-100 bg-warning bg-opacity-10">
+            <div class="card-body py-3">
+                <div class="fs-2 fw-bold text-warning">@Model.PendingAssets.Count</div>
+                <div class="small text-muted">معلقة</div>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-warning bg-opacity-10 border-0 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold">
+            <i class="bi bi-hourglass-split me-2 text-warning"></i>
+            بانتظار إجراءك
+            <span class="badge bg-warning text-dark ms-2">@Model.PendingAssets.Count</span>
+        </h6>
+        <a asp-controller="Asset" asp-action="Index" class="btn btn-sm btn-outline-secondary">عرض الكل</a>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.PendingAssets.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-check-circle fs-1 text-success"></i>
+                <p class="mt-2 fw-semibold">كل شيء على ما يرام! لا توجد إجراءات معلقة.</p>
+            </div>
+        }
+        else
+        {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>الكود</th><th>الاسم</th><th>الموقع</th>
+                        <th>المرحلة</th><th>النوع</th><th>الحالة</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.PendingAssets.Take(20))
+                    {
+                    <tr>
+                        <td><code class="text-primary small">@a.AssetCode</code></td>
+                        <td class="fw-semibold">@a.AssetName</td>
+                        <td class="text-muted small">@a.City @a.Location</td>
+                        <td><span class="badge rounded-pill bg-warning text-dark small">@a.StageName</span></td>
+                        <td><span class="badge bg-secondary small">@a.TypeAr</span></td>
+                        <td>
+                            <span class="badge small bg-@a.StatusColor">@a.StatusAr</span>
+                        </td>
+                        <td>
+                            <a asp-controller="Asset" asp-action="Details"
+                               asp-route-id="@a.Id" class="btn btn-sm btn-primary">
+                                <i class="bi bi-arrow-right-circle me-1"></i>إجراء
+                            </a>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+</div>

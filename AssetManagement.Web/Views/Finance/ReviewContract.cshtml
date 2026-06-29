@@ -1,0 +1,110 @@
+@{
+    ViewData["Title"] = "مراجعة العقد";
+    var asset    = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    var contract = (AssetManagement.Domain.Entities.Contract)ViewBag.Contract;
+    var vals     = (ICollection<AssetManagement.Domain.Entities.AssetValuation>)(ViewBag.Valuations
+                    ?? new List<AssetManagement.Domain.Entities.AssetValuation>());
+    bool isSale  = contract.ContractType == AssetManagement.Domain.Enums.ContractType.Sale;
+    var rental   = asset.RentalRequests.OrderByDescending(r => r.CreatedAt).FirstOrDefault();
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-eye me-2 text-info"></i>مراجعة العقد</h5>
+    <a asp-controller="Asset" asp-action="Details" asp-route-id="@asset.Id" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-right me-1"></i>رجوع
+    </a>
+</div>
+<div class="row g-3">
+<div class="col-md-8">
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-primary text-white fw-bold">
+            <i class="bi bi-file-earmark-text me-2"></i>@contract.ContractNumber
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-6"><div class="text-muted small">الطرف</div><div class="fw-bold">@contract.PartyName</div></div>
+                <div class="col-6"><div class="text-muted small">رقم الهوية</div><div>@contract.PartyIdNumber</div></div>
+                <div class="col-6"><div class="text-muted small">الهاتف</div><div>@contract.PartyPhone</div></div>
+                <div class="col-6">
+                    <div class="text-muted small">المبلغ</div>
+                    <div class="fw-bold text-success fs-5">@contract.Amount.ToString("N0") EGP</div>
+                </div>
+                @if (!isSale && rental != null)
+                {
+                <div class="col-6"><div class="text-muted small">تاريخ البداية</div><div>@contract.StartDate?.ToString("yyyy/MM/dd")</div></div>
+                <div class="col-6"><div class="text-muted small">تاريخ الانتهاء</div><div>@contract.EndDate?.ToString("yyyy/MM/dd")</div></div>
+                <div class="col-4"><div class="text-muted small">التأمين</div>
+                    <div class="fw-semibold">@(rental.SecurityDeposit.HasValue ? rental.SecurityDeposit.Value.ToString("N0") + " EGP" : "—")</div></div>
+                <div class="col-4"><div class="text-muted small">الزيادة السنوية</div>
+                    <div class="fw-semibold">@(rental.AnnualIncrease.HasValue ? rental.AnnualIncrease.Value + "%" : "—")</div></div>
+                <div class="col-4"><div class="text-muted small">فترة السماح</div>
+                    <div class="fw-semibold">@(rental.GracePeriod.HasValue ? rental.GracePeriod.Value + " شهر" : "—")</div></div>
+                }
+                <div class="col-6"><div class="text-muted small">العقار</div><div>@asset.AssetName — @asset.City</div></div>
+                <div class="col-6"><div class="text-muted small">نوع العقد</div>
+                    <span class="badge @(isSale ? "bg-success" : "bg-info")">@(isSale ? "بيع" : "إيجار")</span></div>
+            </div>
+        </div>
+    </div>
+    @if (vals.Any())
+    {
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-warning bg-opacity-10 fw-bold">
+            <i class="bi bi-bar-chart me-2 text-warning"></i>التقييمات (للمرجعية)
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                @foreach (var v in vals)
+                {
+                    string lbl = v.EvaluationType.ToString() switch {
+                        "Marketing" => "تقييم التسويق", "Finance" => "تقييم المالية",
+                        "Expert"    => "تقييم مكاتب الخبراء", _ => v.EvaluationType.ToString() };
+                <div class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <div class="text-muted small">@lbl</div>
+                        <div class="fw-bold fs-5">@v.Value.ToString("N0")</div>
+                        <div class="text-muted small">EGP</div>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+    }
+</div>
+<div class="col-md-4">
+    <div class="card border-0 shadow-sm mb-3 border-success border-2">
+        <div class="card-header bg-success text-white fw-bold">اعتماد العقد</div>
+        <div class="card-body">
+            <form asp-controller="Finance" asp-action="ApproveContract" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="assetId" value="@asset.Id"/>
+                <textarea name="notes" class="form-control form-control-sm mb-3" rows="2" placeholder="ملاحظات الاعتماد..."></textarea>
+                <button type="submit" class="btn btn-success w-100 fw-bold">
+                    <i class="bi bi-check-lg me-2"></i>اعتماد العقد
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm mb-3 border-danger border-2">
+        <div class="card-header bg-danger text-white fw-bold">رفض العقد</div>
+        <div class="card-body">
+            <form asp-controller="Finance" asp-action="RejectContract" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="assetId" value="@asset.Id"/>
+                <textarea name="reason" class="form-control form-control-sm border-danger mb-3" rows="2" placeholder="سبب الرفض..." required></textarea>
+                <button type="submit" class="btn btn-danger w-100">
+                    <i class="bi bi-x-lg me-2"></i>رفض العقد
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <a asp-controller="Contracts" asp-action="DownloadWord" asp-route-contractId="@contract.Id"
+               class="btn btn-outline-success w-100">
+                <i class="bi bi-file-earmark-word me-2"></i>تحميل العقد Word
+            </a>
+        </div>
+    </div>
+</div>
+</div>

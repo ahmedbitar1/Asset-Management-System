@@ -1,0 +1,12 @@
+global using AssetManagement.Application.Interfaces;
+global using AssetManagement.Application.Services;
+global using AssetManagement.Application.ViewModels;
+global using AssetManagement.Domain.Entities;
+global using AssetManagement.Domain.Enums;
+global using AssetManagement.Domain.Interfaces;
+global using AssetManagement.Infrastructure.Data;
+global using AssetManagement.Infrastructure.Repository;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Mvc;
+global using System.Security.Claims;

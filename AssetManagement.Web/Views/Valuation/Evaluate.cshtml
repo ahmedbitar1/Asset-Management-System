@@ -1,0 +1,188 @@
+@model AssetManagement.Application.ViewModels.ValuationViewModel
+@{
+    ViewData["Title"] = "مرحلة التقييم";
+    var asset    = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    string role  = ViewBag.UserRole ?? "SuperAdmin";
+    bool hasMkt  = (bool)(ViewBag.HasMarketing ?? false);
+    bool hasFin  = (bool)(ViewBag.HasFinance   ?? false);
+    bool hasExp  = (bool)(ViewBag.HasExpert    ?? false);
+    bool allDone = (bool)(ViewBag.AllComplete  ?? false);
+    bool isSA    = User.IsInRole("SuperAdmin");
+    int done     = (hasMkt?1:0)+(hasFin?1:0)+(hasExp?1:0);
+    var mktVal   = asset.AssetValuations.FirstOrDefault(v => v.EvaluationType == AssetManagement.Domain.Enums.EvaluationType.Marketing);
+    var finVal   = asset.AssetValuations.FirstOrDefault(v => v.EvaluationType == AssetManagement.Domain.Enums.EvaluationType.Finance);
+    var expVal   = asset.AssetValuations.FirstOrDefault(v => v.EvaluationType == AssetManagement.Domain.Enums.EvaluationType.Expert);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="fw-bold mb-1">
+            <i class="bi bi-bar-chart me-2 text-warning"></i>مرحلة التقييم
+        </h5>
+        <span class="badge bg-@(done==3?"success":done>0?"warning":"secondary")">@done/3 تقييمات مكتملة</span>
+    </div>
+    <a asp-controller="Asset" asp-action="Details" asp-route-id="@Model.AssetId"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-right me-1"></i>رجوع
+    </a>
+</div>
+
+<div class="row g-3">
+<div class="col-md-4">
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold">
+            <i class="bi bi-building me-2 text-primary"></i>@asset.AssetName
+        </div>
+        <div class="card-body small">
+            <div><span class="text-muted">الكود:</span> <code>@asset.AssetCode</code></div>
+            <div><span class="text-muted">المدينة:</span> @asset.City</div>
+            @if (asset.LandArea.HasValue || asset.Area.HasValue)
+            {<div><span class="text-muted">المساحة:</span> @((asset.LandArea ?? asset.Area)?.ToString("N0")) م²</div>}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light fw-bold small">حالة التقييمات</div>
+        <div class="card-body p-2">
+            <div class="d-flex justify-content-between align-items-center p-2 rounded mb-1 @(hasMkt?"bg-success bg-opacity-10":"bg-light")">
+                <span class="small fw-semibold">تقييم التسويق</span>
+                @if (hasMkt && mktVal != null)
+                {<span class="badge bg-success">✓ @mktVal.Value.ToString("N0") EGP</span>}
+                else
+                {<span class="badge bg-secondary">معلق</span>}
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-2 rounded mb-1 @(hasFin?"bg-success bg-opacity-10":"bg-light")">
+                <span class="small fw-semibold">تقييم المالية</span>
+                @if (hasFin && finVal != null)
+                {<span class="badge bg-success">✓ @finVal.Value.ToString("N0") EGP</span>}
+                else
+                {<span class="badge bg-secondary">معلق</span>}
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-2 rounded @(hasExp?"bg-success bg-opacity-10":"bg-light")">
+                <span class="small fw-semibold">تقييم الخبراء</span>
+                @if (hasExp && expVal != null)
+                {<span class="badge bg-success">✓ @expVal.Value.ToString("N0") EGP</span>}
+                else
+                {<span class="badge bg-secondary">معلق</span>}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-8">
+<div class="card border-0 shadow-sm">
+    <div class="card-header fw-bold bg-warning bg-opacity-10">
+        <i class="bi bi-pencil-square me-2 text-warning"></i>
+        @(role == "Marketing" ? "تقييم التسويق" :
+          role == "Finance"   ? "تقييم المالية" :
+          role == "Legal"     ? "تقييم مكاتب الخبراء" :
+          "تقييم شامل (SuperAdmin)")
+    </div>
+    <div class="card-body">
+        <form asp-action="Evaluate" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="AssetId"/>
+
+            @if (role == "Marketing" || isSA)
+            {
+            <div class="mb-4">
+                <h6 class="fw-bold border-bottom pb-2 text-warning">
+                    <i class="bi bi-megaphone me-2"></i>تقييم التسويق
+                    @if (hasMkt){<span class="badge bg-success ms-2">✓ محفوظ</span>}
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">القيمة (EGP)</label>
+                        <div class="input-group">
+                            <input asp-for="MarketingValue" type="number" step="1" class="form-control"/>
+                            <span class="input-group-text">EGP</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">ملاحظات</label>
+                        <input asp-for="MarketingComments" class="form-control"/>
+                    </div>
+                </div>
+            </div>
+            }
+
+            @if (role == "Finance" || isSA)
+            {
+            <div class="mb-4">
+                <h6 class="fw-bold border-bottom pb-2 text-info">
+                    <i class="bi bi-bank me-2"></i>تقييم المالية
+                    @if (hasFin){<span class="badge bg-success ms-2">✓ محفوظ</span>}
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">القيمة (EGP)</label>
+                        <div class="input-group">
+                            <input asp-for="FinanceValue" type="number" step="1" class="form-control"/>
+                            <span class="input-group-text">EGP</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">ملاحظات</label>
+                        <input asp-for="FinanceComments" class="form-control"/>
+                    </div>
+                </div>
+            </div>
+            }
+
+            @if (role == "Legal" || isSA)
+            {
+            <div class="mb-4">
+                <h6 class="fw-bold border-bottom pb-2 text-success">
+                    <i class="bi bi-award me-2"></i>تقييم مكاتب الخبراء
+                    @if (hasExp){<span class="badge bg-success ms-2">✓ محفوظ</span>}
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">القيمة (EGP)</label>
+                        <div class="input-group">
+                            <input asp-for="ExpertValue" type="number" step="1" class="form-control"/>
+                            <span class="input-group-text">EGP</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">ملاحظات</label>
+                        <input asp-for="ExpertComments" class="form-control"/>
+                    </div>
+                </div>
+            </div>
+            }
+
+            @if (isSA)
+            {
+            <div class="mb-4">
+                <h6 class="fw-bold border-bottom pb-2">نوع التصرف</h6>
+                <div class="d-flex gap-3">
+                    @foreach (var opt in new[]{("Sale","بيع"),("Rent","إيجار"),("Both","بيع وإيجار")})
+                    {
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="DispositionType"
+                               value="@opt.Item1" id="dt_@opt.Item1"/>
+                        <label class="form-check-label" for="dt_@opt.Item1">@opt.Item2</label>
+                    </div>
+                    }
+                </div>
+            </div>
+            }
+
+            <button type="submit" class="btn btn-warning fw-bold w-100">
+                <i class="bi bi-check-lg me-2"></i>حفظ التقييم
+                <span class="small opacity-75 ms-1">(@done/3 مكتمل)</span>
+            </button>
+
+            @if (allDone)
+            {
+            <div class="alert alert-success mt-3 mb-0">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                جميع التقييمات مكتملة — سينتقل الأصل تلقائياً عند الحفظ
+            </div>
+            }
+        </form>
+    </div>
+</div>
+</div>
+</div>

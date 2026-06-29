@@ -1,0 +1,183 @@
+@{
+    ViewData["Title"] = "طباعة الطلب";
+    var asset  = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    var vals   = ViewBag.Valuations as ICollection<AssetManagement.Domain.Entities.AssetValuation>
+                 ?? new List<AssetManagement.Domain.Entities.AssetValuation>();
+    var rental = ViewBag.Rental as AssetManagement.Domain.Entities.RentalRequest;
+    var sale   = ViewBag.Sale   as AssetManagement.Domain.Entities.SaleRequest;
+    bool hasSale   = sale   != null;
+    bool hasRental = rental != null;
+    string requestType = hasRental ? "إيجار" : "بيع";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<title>طباعة طلب @requestType — @asset.AssetCode</title>
+<style>
+* { font-family: Arial, sans-serif; font-size: 13px; margin: 0; padding: 0; }
+body { margin: 20px; color: #333; }
+h2 { text-align: center; font-size: 18px; border-bottom: 2px solid #1a56db;
+     padding-bottom: 8px; margin-bottom: 16px; color: #1a56db; }
+.sec-title { font-weight: bold; background: #f0f4ff; padding: 6px 10px;
+     border-right: 4px solid #1a56db; margin: 14px 0 8px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+td, th { border: 1px solid #ddd; padding: 7px 10px; }
+th { background: #f5f5f5; font-weight: bold; text-align: right; width: 35%; }
+.val-wrap { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0; }
+.val-box { flex: 1; min-width: 130px; text-align: center; border: 1px solid #ddd;
+    padding: 10px; border-radius: 6px; }
+.val-label { font-size: 11px; color: #666; margin-bottom: 4px; }
+.val-amount { font-size: 17px; font-weight: bold; color: #1a56db; }
+.no-print { margin-bottom: 16px; text-align: center; }
+@@media print { .no-print { display: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+    <button onclick="window.print()"
+            style="padding:8px 24px;background:#1a56db;color:white;border:none;border-radius:6px;cursor:pointer;margin-left:8px;">
+        طباعة
+    </button>
+    <button onclick="window.close()"
+            style="padding:8px 24px;background:#eee;border:1px solid #ccc;border-radius:6px;cursor:pointer;">
+        إغلاق
+    </button>
+</div>
+
+<h2>نموذج طلب @requestType — @DateTime.Now.ToString("yyyy/MM/dd")</h2>
+
+<!-- بيانات العقار -->
+<div class="sec-title">بيانات العقار</div>
+<table>
+    <tr>
+        <th>اسم العقار</th>
+        <td>@asset.AssetName</td>
+        <th>الكود</th>
+        <td>@asset.AssetCode</td>
+    </tr>
+    <tr>
+        <th>نوع العقار</th>
+        <td>@(asset.PropertyType ?? "—")</td>
+        <th>المحافظة / الحي</th>
+        <td>@asset.City @asset.District</td>
+    </tr>
+    <tr>
+        <th>مساحة الأرض</th>
+        <td>@(asset.LandArea.HasValue ? asset.LandArea.Value.ToString("N0") + " م²" : asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " م²" : "—")</td>
+        <th>مساحة المباني</th>
+        <td>@(asset.BuildingArea.HasValue ? asset.BuildingArea.Value.ToString("N0") + " م²" : "—")</td>
+    </tr>
+    <tr>
+        <th>الشركة المالكة</th>
+        <td>@(asset.OwnerCompany ?? "—")</td>
+        <th>الموقف</th>
+        <td>@(asset.OccupancyStatus ?? "—")</td>
+    </tr>
+</table>
+
+<!-- التقييمات -->
+@if (vals.Any())
+{
+<div class="sec-title">التقييمات (للمرجعية)</div>
+<div class="val-wrap">
+    @foreach (var v in vals)
+    {
+        string lbl = v.EvaluationType.ToString() switch {
+            "Marketing" => "تقييم التسويق",
+            "Finance"   => "تقييم المالية",
+            "Expert"    => "تقييم مكاتب الخبراء",
+            _ => v.EvaluationType.ToString()
+        };
+    <div class="val-box">
+        <div class="val-label">@lbl</div>
+        <div class="val-amount">@v.Value.ToString("N0") EGP</div>
+        @if (!string.IsNullOrEmpty(v.Comments))
+        {<div style="font-size:11px;color:#666;margin-top:4px;">@v.Comments</div>}
+    </div>
+    }
+</div>
+}
+
+<!-- بيانات طلب الإيجار -->
+@if (hasRental && rental != null)
+{
+<div class="sec-title">بيانات طلب الإيجار</div>
+<table>
+    <tr>
+        <th>اسم المستأجر</th>
+        <td>@rental.TenantName</td>
+        <th>رقم الهوية</th>
+        <td>@(rental.TenantIdNumber ?? "—")</td>
+    </tr>
+    <tr>
+        <th>الهاتف</th>
+        <td>@(rental.TenantPhone ?? "—")</td>
+        <th>البريد الإلكتروني</th>
+        <td>@(rental.TenantEmail ?? "—")</td>
+    </tr>
+    <tr>
+        <th>الإيجار الشهري</th>
+        <td style="font-weight:bold;color:green">@rental.ProposedRent.ToString("N0") EGP</td>
+        <th>مدة العقد</th>
+        <td>@(rental.ContractDurationYears.HasValue ? rental.ContractDurationYears + " سنة" : rental.RentDurationMonths + " شهر")</td>
+    </tr>
+    <tr>
+        <th>التأمين</th>
+        <td>@(rental.SecurityDeposit.HasValue ? rental.SecurityDeposit.Value.ToString("N0") + " EGP" : "—")</td>
+        <th>الزيادة السنوية</th>
+        <td>@(rental.AnnualIncrease.HasValue ? rental.AnnualIncrease.Value + "%" : "—")</td>
+    </tr>
+    <tr>
+        <th>فترة السماح</th>
+        <td>@(rental.GracePeriod.HasValue ? rental.GracePeriod.Value + " شهر" : "—")</td>
+        <th>تاريخ البداية</th>
+        <td>@rental.StartDate?.ToString("yyyy/MM/dd")</td>
+    </tr>
+    @if (!string.IsNullOrEmpty(rental.Notes))
+    {<tr><th>ملاحظات</th><td colspan="3">@rental.Notes</td></tr>}
+</table>
+}
+
+<!-- بيانات طلب البيع -->
+@if (hasSale && sale != null)
+{
+<div class="sec-title">بيانات طلب البيع</div>
+<table>
+    <tr>
+        <th>اسم المشتري</th>
+        <td>@sale.BuyerName</td>
+        <th>رقم الهوية</th>
+        <td>@(sale.BuyerIdNumber ?? "—")</td>
+    </tr>
+    <tr>
+        <th>الهاتف</th>
+        <td>@(sale.BuyerPhone ?? "—")</td>
+        <th>البريد الإلكتروني</th>
+        <td>@(sale.BuyerEmail ?? "—")</td>
+    </tr>
+    <tr>
+        <th>السعر المعروض</th>
+        <td style="font-weight:bold;color:green;font-size:15px">@sale.OfferedPrice.ToString("N0") EGP</td>
+        <th>طريقة الدفع</th>
+        <td>@(sale.PaymentMethod ?? "—")</td>
+    </tr>
+    @if (!string.IsNullOrEmpty(sale.Notes))
+    {<tr><th>ملاحظات</th><td colspan="3">@sale.Notes</td></tr>}
+</table>
+}
+
+@if (!hasRental && !hasSale)
+{
+<div style="text-align:center;padding:20px;color:#999;">
+    لا يوجد طلب مرتبط بهذا العقار
+</div>
+}
+
+<div style="margin-top:40px;text-align:center;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:10px;">
+    نظام إدارة الأصول — @DateTime.Now.ToString("yyyy/MM/dd HH:mm")
+</div>
+</body>
+</html>

@@ -1,0 +1,385 @@
+﻿@using AssetManagement.Application.Helpers
+@{
+    ViewData["Title"] = "تفاصيل العقار";
+    var a     = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    var roles = (IList<string>)(ViewBag.Roles ?? new List<string>());
+    bool isAdmin = roles.Contains("SuperAdmin");
+    string sn(int s) => AssetManagement.Application.ViewModels.AssetCardViewModel.StageNames.GetValueOrDefault(s, s.ToString());
+
+    string StatusAr(AssetManagement.Domain.Enums.AssetStatus s) => s switch {
+        AssetManagement.Domain.Enums.AssetStatus.Active   => "نشط",
+        AssetManagement.Domain.Enums.AssetStatus.Sold     => "تم البيع",
+        AssetManagement.Domain.Enums.AssetStatus.Rented   => "تم التأجير",
+        AssetManagement.Domain.Enums.AssetStatus.Rejected => "مرفوض",
+        _                                                  => "معلق"
+    };
+
+    string ActionAr(string? action) => action switch {
+        "Approved"               => "موافقة",
+        "Rejected"               => "رفض",
+        "Imported"               => "استيراد",
+        "AutoAdvanced"           => "تلقائي",
+        "RentalRequest"          => "طلب إيجار",
+        "SaleRequest"            => "طلب بيع",
+        "Valued"                 => "تقييم",
+        "Collected"              => "تحصيل",
+        "ContractCreated"        => "إنشاء عقد",
+        "ContractApproved"       => "اعتماد عقد",
+        "SignedContractUploaded" => "رفع عقد موقّع",
+        "FinanceRejected"        => "رفض مالي",
+        "Advanced"               => "تقدم",
+        _                        => action ?? ""
+    };
+
+    string NoteAr(string? note) {
+        if (note == null) return "";
+        return note
+            .Replace("Imported from Excel", "تم الاستيراد من ملف Excel")
+            .Replace("Auto-advanced to optional stages", "انتقال تلقائي إلى المراحل الاختيارية")
+            .Replace("Auto-advanced", "انتقال تلقائي")
+            .Replace("Cash — ", "نقداً — ")
+            .Replace(" — Cash", " — نقداً")
+            .Replace("Cash - ", "نقداً - ")
+            .Replace(" - Cash", " - نقداً")
+            .Replace("Cash", "نقداً")
+            .Replace("Check", "شيك")
+            .Replace("Transfer", "تحويل")
+            .Replace("Receipt:", "إيصال:")
+            .Replace("â€“", "—");
+    }
+}
+
+<style>
+@@media print {
+    .no-print { display:none !important; }
+    .card { break-inside:avoid; box-shadow:none !important; border:1px solid #ddd !important; }
+    body { font-size:12px; }
+    .badge { border:1px solid #999; }
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <div>
+        <h5 class="fw-bold mb-1">@a.AssetName <code class="text-primary fs-6">@a.AssetCode</code></h5>
+        <span class="badge bg-warning text-dark">@sn(a.CurrentStage)</span>
+        <span class="badge bg-@(a.Status==AssetManagement.Domain.Enums.AssetStatus.Active?"success":a.Status==AssetManagement.Domain.Enums.AssetStatus.Sold?"primary":a.Status==AssetManagement.Domain.Enums.AssetStatus.Rented?"info":a.Status==AssetManagement.Domain.Enums.AssetStatus.Rejected?"danger":"secondary") ms-1">
+            @StatusAr(a.Status)
+        </span>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer me-1"></i>طباعة
+        </button>
+        <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-primary btn-sm">
+            <i class="bi bi-gear me-1"></i>سير العمل
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-right me-1"></i>رجوع
+        </a>
+    </div>
+</div>
+
+<div class="d-none d-print-block text-center mb-3">
+    <h4>نظام إدارة الأصول — تقرير شامل</h4>
+    <div>تاريخ الطباعة: @DateTime.Now.ToString("yyyy/MM/dd HH:mm")</div>
+    <hr/>
+</div>
+
+<div class="row g-3">
+
+<div class="col-12">
+<div class="card border-0 shadow-sm">
+    <div class="card-header fw-bold bg-primary text-white">
+        <i class="bi bi-building me-2"></i>بيانات العقار
+    </div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3 col-6"><div class="text-muted small">الاسم</div><div class="fw-semibold">@a.AssetName</div></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">الكود</div><code class="text-primary">@a.AssetCode</code></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">نوع العقار</div><div>@(a.PropertyType ?? "—")</div></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">الشركة المالكة</div><div>@(a.OwnerCompany ?? "—")</div></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">المحافظة</div><div>@a.City</div></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">الحي / القسم</div><div>@a.District</div></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">الموقف</div>
+                <span class="badge @(a.OccupancyStatus=="مستغل"?"bg-success":a.OccupancyStatus=="مؤجر"?"bg-info":"bg-secondary")">
+                    @(a.OccupancyStatus ?? "—")
+                </span>
+            </div>
+            <div class="col-md-3 col-6"><div class="text-muted small">سند الملكية</div><div>@(a.DeedType ?? "—")</div></div>
+            @if (a.LandArea.HasValue || a.BuildingArea.HasValue || a.Area.HasValue)
+            {
+            <div class="col-md-3 col-6"><div class="text-muted small">مساحة الأرض</div>
+                <div>@(a.LandArea.HasValue ? a.LandArea.Value.ToString("N0") + " م²" : a.Area.HasValue ? a.Area.Value.ToString("N0") + " م²" : "—")</div></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">مساحة المباني</div>
+                <div>@(a.BuildingArea.HasValue ? a.BuildingArea.Value.ToString("N0") + " م²" : "—")</div></div>
+            }
+            @{
+                var fdLastSale   = a.SaleRequests.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+                var fdLastRental = a.RentalRequests.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+                decimal? fdPrice = a.PurchasePrice;
+                string fdLabel = "سعر الشراء";
+                if (fdLastSale != null) { fdPrice = fdLastSale.OfferedPrice; fdLabel = "سعر البيع"; }
+                else if (fdLastRental != null) { fdPrice = fdLastRental.ProposedRent; fdLabel = "الإيجار الشهري"; }
+            }
+            <div class="col-md-3 col-6"><div class="text-muted small">@fdLabel</div>
+                <div class="text-success fw-semibold">@(fdPrice.HasValue ? "EGP " + fdPrice.Value.ToString("N0") : "—")</div></div>
+            <div class="col-md-3 col-6"><div class="text-muted small">نوع التصرف</div>
+                <span class="badge @(a.AssetType==AssetManagement.Domain.Enums.AssetType.Sale?"bg-success":a.AssetType==AssetManagement.Domain.Enums.AssetType.Rent?"bg-info":"bg-warning text-dark")">
+                    @(a.AssetType==AssetManagement.Domain.Enums.AssetType.Sale?"بيع":a.AssetType==AssetManagement.Domain.Enums.AssetType.Rent?"إيجار":"بيع وإيجار")
+                </span>
+            </div>
+            @if (!string.IsNullOrEmpty(a.AssetDescription))
+            {<div class="col-12"><div class="text-muted small">وصف الأصل</div><div>@a.AssetDescription</div></div>}
+            @if (!string.IsNullOrEmpty(a.Notes))
+            {<div class="col-12"><div class="text-muted small">ملاحظات</div><div class="p-2 bg-light rounded small">@a.Notes</div></div>}
+            @if (!string.IsNullOrEmpty(a.PreviousOffers))
+            {<div class="col-12"><div class="text-muted small">العروض السابقة</div><div class="text-muted small">@a.PreviousOffers</div></div>}
+        </div>
+    </div>
+</div>
+</div>
+
+@if (a.AssetValuations.Any())
+{
+<div class="col-12">
+<div class="card border-0 shadow-sm">
+    <div class="card-header fw-bold bg-warning bg-opacity-10">
+        <i class="bi bi-bar-chart me-2 text-warning"></i>التقييمات
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            @foreach (var v in a.AssetValuations)
+            {
+                string lbl = v.EvaluationType.ToString() switch {
+                    "Marketing" => "تقييم التسويق",
+                    "Finance"   => "تقييم المالية",
+                    "Expert"    => "تقييم مكاتب الخبراء",
+                    _ => v.EvaluationType.ToString() };
+                string clr = v.EvaluationType.ToString() switch {
+                    "Marketing" => "warning", "Finance" => "info", _ => "success" };
+            <div class="col-md-4">
+                <div class="border rounded p-3 text-center h-100">
+                    <div class="text-muted small mb-1">@lbl</div>
+                    <div class="fw-bold fs-4 text-@clr">@v.Value.ToString("N0")</div>
+                    <div class="text-muted small">EGP</div>
+                    @if (!string.IsNullOrEmpty(v.Comments))
+                    {<div class="text-muted small mt-1 fst-italic">@v.Comments</div>}
+                    <div class="text-muted" style="font-size:10px">@v.EvaluationDate.ToString("yyyy/MM/dd")</div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</div>
+</div>
+}
+
+@if (a.OptionalStageDetails.Any())
+{
+<div class="col-md-6">
+<div class="card border-0 shadow-sm h-100">
+    <div class="card-header fw-bold bg-info bg-opacity-10">
+        <i class="bi bi-diagram-3 me-2 text-info"></i>المراحل الاختيارية
+    </div>
+    <div class="card-body">
+        @foreach (var d in a.OptionalStageDetails.OrderByDescending(x => x.CreatedAt))
+        {
+        <div class="border rounded p-2 mb-2 small">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="badge @(d.StageKey=="2a"?"bg-warning text-dark":d.StageKey=="2b"?"bg-primary":"bg-success")">
+                    @(d.StageKey=="2a"?"التسويق":d.StageKey=="2b"?"الهندسة":"الشؤون الإدارية")
+                </span>
+                <span class="text-muted">@d.CreatedAt.ToString("yyyy/MM/dd")</span>
+            </div>
+            @if (!string.IsNullOrEmpty(d.Details))
+            {
+                @foreach (var pair in d.Details.Split('|', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var kv = pair.Split(':', 2);
+                    if (kv.Length == 2 && !string.IsNullOrWhiteSpace(kv[1]))
+                    {
+                        string arKey = kv[0].Trim() switch {
+                            "buildingType" or "Building" => "نوع المبنى",
+                            "area" or "Area"             => "المساحة",
+                            "structure" or "Structure"   => "تفاصيل الهيكل",
+                            "electricity" or "Electricity" => "الكهرباء",
+                            "water" or "Water"           => "المياه",
+                            "gas" or "Gas"               => "الغاز",
+                            "other" or "Other"           => "خدمات أخرى",
+                            "adText"                     => "نص الإعلان",
+                            _                            => kv[0].Trim()
+                        };
+                        string valAr = kv[1].Trim() switch {
+                            "Connected - Active"      => "متصل - نشط",
+                            "Connected - Inactive"    => "متصل - غير نشط",
+                            "Disconnected"            => "غير متصل",
+                            "Not Connected"           => "غير متصل",
+                            "Natural Gas - Connected" => "غاز طبيعي - متصل",
+                            "None"                    => "لا يوجد",
+                            "Residential"             => "سكني",
+                            "Commercial"              => "تجاري",
+                            "Industrial"              => "صناعي",
+                            "Active"                  => "نشط",
+                            "Inactive"                => "غير نشط",
+                            _                         => kv[1].Trim()
+                        };
+                    <div class="d-flex gap-2 border-bottom py-1">
+                        <span class="text-muted" style="min-width:110px">@arKey</span>
+                        <strong>@valAr</strong>
+                    </div>
+                    }
+                }
+            }
+        </div>
+        }
+    </div>
+</div>
+</div>
+}
+
+<div class="col-12">
+<div class="card border-0 shadow-sm">
+    <div class="card-header fw-bold bg-light">
+        <i class="bi bi-clock-history me-2 text-secondary"></i>سجل المراحل التفصيلي
+    </div>
+    <div class="card-body">
+        @{ int stepNo = 0; }
+        @foreach (var h in a.StageHistories.OrderBy(x => x.PerformedAt))
+        {
+            stepNo++;
+            bool isRejected = h.Action == "Rejected";
+            bool isAuto     = h.Action is "Imported" or "AutoAdvanced";
+            string borderClr = isRejected ? "danger" : isAuto ? "secondary" : "success";
+        <div class="card border-0 shadow-sm mb-3" style="border-right:5px solid var(--bs-@(borderClr)) !important;">
+            <div class="card-header bg-@(borderClr) bg-opacity-10 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-@borderClr">@stepNo</span>
+                    <strong class="ms-2">@sn(h.FromStage) → @sn(h.ToStage)</strong>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-@borderClr">@ActionAr(h.Action)</span>
+                    <div class="text-muted" style="font-size:11px">@h.PerformedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(h.Notes))
+            {
+            <div class="card-body py-2">
+                <div class="text-muted small mb-1">التفاصيل:</div>
+                <div class="p-2 bg-light rounded small" style="white-space:pre-wrap">@NoteAr(h.Notes)</div>
+            </div>
+            }
+        </div>
+        }
+        @if (!a.StageHistories.Any())
+        {<p class="text-center text-muted py-3">لا يوجد سجل بعد</p>}
+    </div>
+</div>
+</div>
+
+@if (a.RentalRequests.Any() || a.SaleRequests.Any())
+{
+<div class="col-12">
+<div class="card border-0 shadow-sm">
+    <div class="card-header fw-bold bg-light d-flex justify-content-between">
+        <span><i class="bi bi-file-text me-2"></i>الطلبات</span>
+        <a asp-controller="Requests" asp-action="PrintRequest" asp-route-assetId="@a.Id"
+           target="_blank" class="btn btn-sm btn-outline-secondary no-print">
+            <i class="bi bi-printer me-1"></i>طباعة الطلب
+        </a>
+    </div>
+    <div class="card-body p-0">
+        @foreach (var r in a.RentalRequests.OrderByDescending(x => x.CreatedAt))
+        {
+        <div class="p-3 border-bottom small">
+            <div class="fw-semibold text-info mb-1"><i class="bi bi-house-door me-1"></i>طلب إيجار</div>
+            <div class="row g-2">
+                <div class="col-md-3"><span class="text-muted">المستأجر:</span> <strong>@r.TenantName</strong></div>
+                <div class="col-md-3"><span class="text-muted">الإيجار:</span> <strong class="text-success">@r.ProposedRent.ToString("N0") EGP</strong></div>
+                <div class="col-md-3"><span class="text-muted">المدة:</span> @(r.ContractDurationYears.HasValue ? r.ContractDurationYears + " سنة" : r.RentDurationMonths + " شهر")</div>
+                <div class="col-md-3"><span class="text-muted">التأمين:</span> @(r.SecurityDeposit.HasValue ? r.SecurityDeposit.Value.ToString("N0") + " EGP" : "—")</div>
+                <div class="col-md-3"><span class="text-muted">الزيادة:</span> @(r.AnnualIncrease.HasValue ? r.AnnualIncrease.Value + "%" : "—")</div>
+                <div class="col-md-3"><span class="text-muted">فترة السماح:</span> @(r.GracePeriod.HasValue ? r.GracePeriod.Value + " شهر" : "—")</div>
+                <div class="col-md-3"><span class="text-muted">البداية:</span> @r.StartDate?.ToString("yyyy/MM/dd")</div>
+                <div class="col-md-3"><span class="text-muted">هاتف:</span> @r.TenantPhone</div>
+            </div>
+        </div>
+        }
+        @foreach (var r in a.SaleRequests.OrderByDescending(x => x.CreatedAt))
+        {
+        <div class="p-3 border-bottom small">
+            <div class="fw-semibold text-success mb-1"><i class="bi bi-cash-coin me-1"></i>طلب بيع</div>
+            <div class="row g-2">
+                <div class="col-md-3"><span class="text-muted">المشتري:</span> <strong>@r.BuyerName</strong></div>
+                <div class="col-md-3"><span class="text-muted">السعر:</span> <strong class="text-success">@r.OfferedPrice.ToString("N0") EGP</strong></div>
+                <div class="col-md-3"><span class="text-muted">طريقة الدفع:</span> @r.PaymentMethod</div>
+                <div class="col-md-3"><span class="text-muted">هاتف:</span> @r.BuyerPhone</div>
+            </div>
+        </div>
+        }
+    </div>
+</div>
+</div>
+}
+
+@if (a.Contracts.Any())
+{
+<div class="col-12">
+<div class="card border-0 shadow-sm">
+    <div class="card-header fw-bold bg-primary text-white">
+        <i class="bi bi-file-earmark-text me-2"></i>العقود (@a.Contracts.Count)
+    </div>
+    @foreach (var c in a.Contracts.OrderByDescending(x => x.CreatedAt))
+    {
+    <div class="card-body border-bottom">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-2"><div class="text-muted small">رقم العقد</div><code class="text-primary">@c.ContractNumber</code></div>
+            <div class="col-md-2"><div class="text-muted small">النوع</div>
+                <span class="badge @(c.ContractType==AssetManagement.Domain.Enums.ContractType.Rent?"bg-info":"bg-success")">
+                    @(c.ContractType==AssetManagement.Domain.Enums.ContractType.Rent?"إيجار":"بيع")
+                </span>
+            </div>
+            <div class="col-md-2"><div class="text-muted small">الطرف</div><div class="fw-semibold">@c.PartyName</div></div>
+            <div class="col-md-2"><div class="text-muted small">المبلغ</div><div class="fw-bold text-success">@c.Amount.ToString("N0") EGP</div></div>
+            <div class="col-md-2"><div class="text-muted small">التاريخ</div><div class="small">@c.CreatedAt.ToString("yyyy/MM/dd")</div></div>
+            <div class="col-md-2 no-print">
+                <a asp-controller="Contracts" asp-action="DownloadWord" asp-route-contractId="@c.Id"
+                   class="btn btn-sm btn-success w-100">
+                    <i class="bi bi-file-earmark-word me-1"></i>Word
+                </a>
+            </div>
+        </div>
+        @{
+            var ctx = ViewContext.HttpContext.RequestServices
+                .GetService(typeof(AssetManagement.Infrastructure.Data.ApplicationDbContext))
+                as AssetManagement.Infrastructure.Data.ApplicationDbContext;
+            var contractFiles = ctx?.ContractFiles
+                .Where(f => f.ContractId == c.Id)
+                .OrderByDescending(f => f.UploadedAt)
+                .ToList() ?? new();
+        }
+        @if (contractFiles.Any())
+        {
+        <div class="mt-2">
+            <div class="text-muted small mb-1"><i class="bi bi-paperclip me-1"></i>ملفات مرفوعة (@contractFiles.Count):</div>
+            @foreach (var f in contractFiles)
+            {
+            <div class="d-flex gap-2 align-items-center border rounded p-2 mb-1 small">
+                <i class="bi @(f.FileType=="PDF"?"bi-file-earmark-pdf text-danger":"bi-file-earmark-word text-primary") fs-5"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">@f.FileName</div>
+                    <div class="text-muted">@(f.FileSize/1024) KB — @f.UploadedAt.ToString("yyyy/MM/dd HH:mm")</div>
+                </div>
+                <a href="@f.FilePath" class="btn btn-sm btn-outline-primary no-print" target="_blank">
+                    <i class="bi bi-eye me-1"></i>عرض
+                </a>
+            </div>
+            }
+        </div>
+        }
+    </div>
+    }
+</div>
+</div>
+}
+
+</div>

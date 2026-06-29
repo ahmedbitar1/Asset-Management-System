@@ -1,0 +1,111 @@
+﻿@model AssetManagement.Application.ViewModels.SaleRequestViewModel
+@{
+    ViewData["Title"] = "طلب بيع";
+    var asset = ViewBag.Asset as AssetManagement.Domain.Entities.Asset;
+    var vals  = ViewBag.Valuations as ICollection<AssetManagement.Domain.Entities.AssetValuation>
+                ?? new List<AssetManagement.Domain.Entities.AssetValuation>();
+}
+<div class="row justify-content-center">
+<div class="col-md-9">
+    @if (vals.Any())
+    {
+    <div class="card border-0 shadow-sm mb-3 border-start border-4 border-success">
+        <div class="card-body py-2">
+            <div class="d-flex gap-3 align-items-center flex-wrap">
+                <span class="fw-semibold small text-muted">التقييمات:</span>
+                @foreach (var v in vals)
+                {
+                    string lbl = v.EvaluationType.ToString() switch {
+                        "Marketing" => "تسويق", "Finance" => "مالية",
+                        "Expert" => "خبراء", _ => v.EvaluationType.ToString() };
+                <span class="badge bg-light text-dark border fw-semibold">@lbl: @v.Value.ToString("N0") EGP</span>
+                }
+                @* <a asp-controller="Requests" asp-action="PrintRequest"
+                   asp-route-assetId="@Model.AssetId" target="_blank"
+                   class="btn btn-sm btn-outline-secondary ms-auto">
+                    <i class="bi bi-printer me-1"></i>طباعة
+                </a> *@
+            </div>
+        </div>
+    </div>
+    }
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-success text-white fw-bold">
+            <i class="bi bi-cash-coin me-2"></i>طلب بيع — @Model.AssetName
+            <code class="ms-2 small text-white opacity-75">@Model.AssetCode</code>
+            @if (!string.IsNullOrEmpty(Model.AssetPropertyType))
+            {<span class="badge bg-light text-dark ms-2">@Model.AssetPropertyType</span>}
+        </div>
+        <div class="card-body">
+            <form asp-action="CreateSale" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="AssetId"/>
+                <input type="hidden" asp-for="AssetName"/>
+                <input type="hidden" asp-for="AssetCode"/>
+                <input type="hidden" asp-for="AssetPropertyType"/>
+                <h6 class="fw-bold text-muted mb-3 border-bottom pb-2">بيانات المشتري</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">اسم المشتري *</label>
+                        <input asp-for="BuyerName" class="form-control"/>
+                        <span asp-validation-for="BuyerName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">رقم الهوية</label>
+                        <input asp-for="BuyerIdNumber" class="form-control"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">الهاتف</label>
+                        <input asp-for="BuyerPhone" class="form-control" required/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">البريد الإلكتروني</label>
+                        <input asp-for="BuyerEmail" type="email" class="form-control"/>
+                    </div>
+                </div>
+                <h6 class="fw-bold text-muted mb-3 border-bottom pb-2">تفاصيل البيع</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">السعر المعروض (EGP) *</label>
+                        <div class="input-group">
+                            <input asp-for="OfferedPrice" type="number" class="form-control" min="1"/>
+                            <span class="input-group-text">EGP</span>
+                        </div>
+                        <span asp-validation-for="OfferedPrice" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">طريقة الدفع</label>
+                        <select asp-for="PaymentMethod" class="form-select">
+                            <option value="">— اختر —</option>
+                            <option value="نقداً">نقداً</option>
+                            <option value="تقسيط">تقسيط</option>
+                            <option value="تحويل بنكي">تحويل بنكي</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">ملاحظات</label>
+                        <textarea asp-for="Notes" class="form-control" rows="2" placeholder="ملاحظات إضافية..."></textarea>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success fw-bold flex-grow-1">
+                        <i class="bi bi-check-lg me-2"></i>إرسال طلب البيع
+                    </button>
+                    <a asp-controller="Asset" asp-action="Details" asp-route-id="@Model.AssetId"
+                       class="btn btn-outline-secondary">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+@section Scripts {
+    <script>
+        @if (TempData["AutoPrint"] != null)
+        {
+                    <text>
+                    window.open('/Requests/PrintRequest?assetId=@TempData["AutoPrint"]', '_blank');
+                    </text>
+        }
+    </script>
+}

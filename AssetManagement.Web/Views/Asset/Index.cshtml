@@ -1,0 +1,202 @@
+﻿@model List<AssetManagement.Application.ViewModels.AssetCardViewModel>
+@{
+    ViewData["Title"] = "العقارات";
+    int? selectedStage = ViewBag.Stage != null ? (int?)int.Parse(ViewBag.Stage.ToString()) : null;
+    string selectedStatus = ViewBag.Status ?? "";
+}
+
+<!-- Modal: حذف عقار واحد -->
+<div class="modal fade" id="deleteOneModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center px-4 py-4">
+                <i class="bi bi-trash3-fill text-danger fs-1 d-block mb-3"></i>
+                <h5 class="fw-bold mb-2">حذف العقار؟</h5>
+                <p class="text-muted">أنت على وشك حذف <strong id="deleteOneName" class="text-danger"></strong></p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-3 pb-4">
+                <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <form id="deleteOneForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger px-4 rounded-pill">
+                        <i class="bi bi-trash me-1"></i>نعم، احذف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: حذف الكل -->
+@if (User.IsInRole("SuperAdmin") && Model.Any())
+{
+<div class="modal fade" id="deleteAllModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center px-4 py-4">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                    <i class="bi bi-trash3-fill text-danger fs-1"></i>
+                </div>
+                <h5 class="fw-bold mb-2">حذف جميع العقارات؟</h5>
+                <p class="text-muted mb-1">سيتم حذف <strong class="text-danger">@Model.Count عقار</strong> بشكل نهائي.</p>
+                <p class="text-muted small mb-0">لا يمكن التراجع عن هذا الإجراء.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-3 pb-4">
+                <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <form asp-action="DeleteAll" asp-controller="Asset" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger px-4 rounded-pill">
+                        <i class="bi bi-trash3-fill me-1"></i>نعم، احذف الكل
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">
+        <i class="bi bi-building me-2 text-primary"></i>العقارات
+        <span class="badge bg-secondary ms-2">@Model.Count</span>
+    </h5>
+    <div class="d-flex gap-2">
+        @if (User.IsInRole("Legal") || User.IsInRole("SuperAdmin"))
+        {
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>إضافة أصل
+        </a>
+        }
+        @if (User.IsInRole("SuperAdmin") && Model.Any())
+        {
+        <button type="button" class="btn btn-danger btn-sm"
+                data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+            <i class="bi bi-trash3-fill me-1"></i>حذف الكل
+        </button>
+        }
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input name="search" value="@ViewBag.Search" class="form-control"
+                       placeholder="بحث بالاسم أو الكود أو الموقع..."/>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">— كل الحالات —</option>
+                    @foreach (var s in new[]{"Pending","معلق","Active","نشط","Sold","مباع","Rented","مؤجر","Rejected","مرفوض"}.Chunk(2))
+                    {
+                        if (selectedStatus == s[0])
+                        { <option value="@s[0]" selected>@s[1]</option> }
+                        else
+                        { <option value="@s[0]">@s[1]</option> }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="stage" class="form-select">
+                    <option value="">— كل المراحل —</option>
+                    @foreach (var kv in AssetManagement.Application.ViewModels.AssetCardViewModel.StageNames)
+                    {
+                        if (selectedStage == kv.Key)
+                        { <option value="@kv.Key" selected>@kv.Value</option> }
+                        else
+                        { <option value="@kv.Key">@kv.Value</option> }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-search me-1"></i>بحث
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">مسح</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-1"></i>
+        <p class="mt-2">لا توجد عقارات</p>
+    </div>
+}
+else
+{
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>الكود</th>
+                    <th>الاسم</th>
+                    <th>المدينة</th>
+                    <th>نوع العقار</th>
+                    <th>المساحة</th>
+                    <th>نوع التصرف</th>
+                    <th>المرحلة</th>
+                    <th>الحالة</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var (a, i) in Model.Select((a, i) => (a, i + 1)))
+                {
+                <tr>
+                    <td class="text-muted small">@i</td>
+                    <td><code class="text-primary small">@a.AssetCode</code></td>
+                    <td class="fw-semibold">@a.AssetName</td>
+                    <td class="text-muted small">@a.City</td>
+                    <td class="small text-muted">@a.PropertyType</td>
+                    <td class="small">@(a.Area.HasValue ? a.Area.Value.ToString("N0") + " m²" : "-")</td>
+                    <td><span class="badge bg-secondary">@a.TypeAr</span></td>
+                    <td><span class="badge rounded-pill bg-warning text-dark small">@a.StageName</span></td>
+                    <td><span class="badge bg-@a.StatusColor">@a.StatusAr</span></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a asp-action="FullDetails" asp-route-id="@a.Id"
+                               class="btn btn-sm btn-outline-info" title="تفاصيل كاملة">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary" title="عرض">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            @if (User.IsInRole("Legal") || User.IsInRole("SuperAdmin"))
+                            {
+                            <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-warning" title="تعديل">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            }
+                            @if (User.IsInRole("SuperAdmin"))
+                            {
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="حذف"
+                                    onclick="confirmDeleteOne(@a.Id, '@a.AssetName.Replace("'", "\'")' )">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+}
+
+@section Scripts {
+<script>
+function confirmDeleteOne(id, name) {
+    document.getElementById('deleteOneName').textContent = name;
+    document.getElementById('deleteOneForm').action = '/Asset/Delete/' + id;
+    new bootstrap.Modal(document.getElementById('deleteOneModal')).show();
+}
+</script>
+}

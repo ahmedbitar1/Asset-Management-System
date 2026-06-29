@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "Asset Images";
+    int assetId    = ViewBag.AssetId;
+    string assetName = ViewBag.AssetName;
+    string assetCode = ViewBag.AssetCode;
+    var images = (List<string>)ViewBag.Images;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="fw-bold mb-1">
+            <i class="bi bi-images me-2 text-primary"></i>صور العقار
+        </h5>
+        <div>@assetCode - @assetName</div>
+    </div>
+    <a asp-controller="Asset" asp-action="Details" asp-route-id="@assetId"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-right me-1"></i>رجوع
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white fw-bold">
+                <i class="bi bi-upload me-2"></i>رفع الصور
+            </div>
+            <div class="card-body">
+                <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="assetId" value="@assetId"/>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">اختر الصور</label>
+                        <input type="file" name="files" class="form-control"
+                               accept=".jpg,.jpeg,.png,.webp" multiple required/>
+                        <div class="form-text">JPG, PNG, WebP مسموح</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-cloud-upload me-1"></i>رفع
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light fw-bold">
+                <i class="bi bi-grid me-2"></i>الصور (@images.Count)
+            </div>
+            <div class="card-body">
+                @if (!images.Any())
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-images fs-1"></i>
+                        <p class="mt-2">لم يتم رفع صور بعد</p>
+                    </div>
+                }
+                else
+                {
+                <div class="row g-2">
+                    @foreach (var img in images)
+                    {
+                    <div class="col-4 col-md-3">
+                        <div class="position-relative">
+                            <img src="/uploads/assets/@assetId/@img"
+                                 class="img-fluid rounded shadow-sm"
+                                 style="height:120px;width:100%;object-fit:cover;"
+                                 alt="@img"/>
+                            <form asp-action="Delete" method="post"
+                                  class="position-absolute top-0 end-0 m-1">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="assetId" value="@assetId"/>
+                                <input type="hidden" name="fileName" value="@img"/>
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm rounded-circle p-0"
+                                        style="width:24px;height:24px;font-size:11px;">
+                                    x
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

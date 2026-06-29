@@ -1,0 +1,209 @@
+@{
+    ViewData["Title"] = "التقارير";
+    var assets      = ViewBag.Assets as List<AssetManagement.Domain.Entities.Asset> ?? new();
+    var stageNames  = AssetManagement.Application.ViewModels.AssetCardViewModel.StageNames;
+    var cities      = ViewBag.Cities as List<string> ?? new();
+    var propTypes   = ViewBag.PropertyTypes as List<string> ?? new();
+    string curCity  = ViewBag.CurCity  ?? "";
+    string curPType = ViewBag.CurPropertyType ?? "";
+    string curStatus= ViewBag.CurStatus ?? "";
+    string curAType = ViewBag.CurAssetType ?? "";
+    string curSearch= ViewBag.CurSearch ?? "";
+}
+
+<style>
+@@media print {
+    .no-print { display:none !important; }
+    .card { break-inside:avoid; }
+    body { font-size:12px; }
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <h5 class="fw-bold mb-0">
+        <i class="bi bi-bar-chart me-2 text-primary"></i>التقارير
+        <span class="badge bg-secondary ms-2">@assets.Count عقار</span>
+    </h5>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer me-1"></i>طباعة
+        </button>
+        <a href="/Reports/ExportExcel?city=@Uri.EscapeDataString(curCity)&propertyType=@Uri.EscapeDataString(curPType)&status=@Uri.EscapeDataString(curStatus)&assetType=@Uri.EscapeDataString(curAType)&search=@Uri.EscapeDataString(curSearch)"
+           class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>Excel
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-3 no-print">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">بحث</label>
+                <input name="search" value="@curSearch" class="form-control form-control-sm" placeholder="اسم / كود..."/>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">المدينة</label>
+                <select name="city" class="form-select form-select-sm">
+                    <option value="">الكل</option>
+                    @foreach (var c in cities)
+                    {
+                        if (curCity == c)
+                        { <option value="@c" selected>@c</option> }
+                        else
+                        { <option value="@c">@c</option> }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">نوع العقار</label>
+                <select name="propertyType" class="form-select form-select-sm">
+                    <option value="">الكل</option>
+                    @foreach (var p in propTypes)
+                    {
+                        if (curPType == p)
+                        { <option value="@p" selected>@p</option> }
+                        else
+                        { <option value="@p">@p</option> }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">نوع التصرف</label>
+                <select name="assetType" class="form-select form-select-sm">
+                    <option value="">الكل</option>
+                    @if (curAType=="Sale")   { <option value="Sale" selected>بيع</option> }
+                    else                     { <option value="Sale">بيع</option> }
+                    @if (curAType=="Rent")   { <option value="Rent" selected>إيجار</option> }
+                    else                     { <option value="Rent">إيجار</option> }
+                    @if (curAType=="Both")   { <option value="Both" selected>بيع وإيجار</option> }
+                    else                     { <option value="Both">بيع وإيجار</option> }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">الحالة</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">الكل</option>
+                    @if (curStatus=="Pending")  { <option value="Pending" selected>معلق</option> }
+                    else                        { <option value="Pending">معلق</option> }
+                    @if (curStatus=="Active")   { <option value="Active" selected>نشط</option> }
+                    else                        { <option value="Active">نشط</option> }
+                    @if (curStatus=="Sold")     { <option value="Sold" selected>مباع</option> }
+                    else                        { <option value="Sold">مباع</option> }
+                    @if (curStatus=="Rented")   { <option value="Rented" selected>مؤجر</option> }
+                    else                        { <option value="Rented">مؤجر</option> }
+                    @if (curStatus=="Rejected") { <option value="Rejected" selected>مرفوض</option> }
+                    else                        { <option value="Rejected">مرفوض</option> }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search"></i> بحث
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">مسح</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-2 mb-3">
+    @{
+        var statItems = new (string Label, int Count, string Color)[]
+        {
+            ("الإجمالي",  (int)ViewBag.Total,    "primary"),
+            ("نشطة",   (int)ViewBag.Active,   "success"),
+            ("مباعة",   (int)ViewBag.Sold,     "info"),
+            ("مؤجرة",  (int)ViewBag.Rented,   "warning"),
+            ("مرفوضة", (int)ViewBag.Rejected, "danger"),
+            ("معلقة",  (int)ViewBag.Pending,  "secondary"),
+        };
+    }
+    @foreach (var s in statItems)
+    {
+    <div class="col-6 col-md-2">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body py-2">
+                <div class="fw-bold fs-4 text-@s.Color">@s.Count</div>
+                <div class="small text-muted">@s.Label</div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
+
+<!-- Financial -->
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-2">
+                <div class="text-muted small">إجمالي سعر الشراء</div>
+                <div class="fw-bold text-success">EGP @(((decimal)ViewBag.TotalPurchase).ToString("N0"))</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-2">
+                <div class="text-muted small">إجمالي القيمة الحالية</div>
+                <div class="fw-bold text-primary">EGP @(((decimal)ViewBag.TotalValue).ToString("N0"))</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-light fw-bold">
+        <i class="bi bi-table me-2"></i>العقارات (@assets.Count)
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>الكود</th>
+                    <th>الاسم</th>
+                    <th>المدينة</th>
+                    <th>نوع العقار</th>
+                    <th>نوع التصرف</th>
+                    <th>مساحة الأرض (م²)</th>
+                    <th>المرحلة</th>
+                    <th>الحالة</th>
+                    <th class="no-print"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var (a, i) in assets.Select((a, i) => (a, i + 1)))
+                {
+                    string typeAr = a.AssetType == AssetManagement.Domain.Enums.AssetType.Sale ? "بيع" :
+                                    a.AssetType == AssetManagement.Domain.Enums.AssetType.Rent ? "إيجار" : "بيع وإيجار";
+                    string stAr   = a.Status == AssetManagement.Domain.Enums.AssetStatus.Active   ? "نشط" :
+                                    a.Status == AssetManagement.Domain.Enums.AssetStatus.Sold     ? "مباع" :
+                                    a.Status == AssetManagement.Domain.Enums.AssetStatus.Rented   ? "مؤجر" :
+                                    a.Status == AssetManagement.Domain.Enums.AssetStatus.Rejected ? "مرفوض" : "معلق";
+                    string stColor= a.Status == AssetManagement.Domain.Enums.AssetStatus.Active   ? "success" :
+                                    a.Status == AssetManagement.Domain.Enums.AssetStatus.Sold     ? "primary" :
+                                    a.Status == AssetManagement.Domain.Enums.AssetStatus.Rented   ? "info" :
+                                    a.Status == AssetManagement.Domain.Enums.AssetStatus.Rejected ? "danger" : "secondary";
+                <tr>
+                    <td class="text-muted small">@i</td>
+                    <td><code class="small text-primary">@a.AssetCode</code></td>
+                    <td class="fw-semibold small">@a.AssetName</td>
+                    <td class="text-muted small">@a.City</td>
+                    <td class="small text-muted">@a.PropertyType</td>
+                    <td><span class="badge bg-secondary small">@typeAr</span></td>
+                    <td class="small">@(a.LandArea.HasValue ? a.LandArea.Value.ToString("N0") : a.Area.HasValue ? a.Area.Value.ToString("N0") : "-")</td>
+                    <td><span class="badge bg-warning text-dark small" style="font-size:10px">@stageNames.GetValueOrDefault(a.CurrentStage, a.CurrentStage.ToString())</span></td>
+                    <td><span class="badge bg-@stColor small">@stAr</span></td>
+                    <td class="no-print">
+                        <a asp-controller="Asset" asp-action="FullDetails" asp-route-id="@a.Id"
+                           class="btn btn-sm btn-outline-primary py-0">تفاصيل</a>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

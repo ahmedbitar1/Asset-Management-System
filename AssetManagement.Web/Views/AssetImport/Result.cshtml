@@ -1,0 +1,78 @@
+@model AssetManagement.Application.ViewModels.ImportResultViewModel
+@{
+    ViewData["Title"] = "نتيجة الاستيراد";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="fw-bold mb-0">
+        <i class="bi bi-clipboard-check me-2"></i>نتيجة الاستيراد
+    </h5>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-upload me-1"></i>استيراد مجدداً
+        </a>
+        <a asp-controller="Asset" asp-action="Index" class="btn btn-primary btn-sm">
+            <i class="bi bi-building me-1"></i>قائمة العقارات
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-primary bg-opacity-10 text-center">
+            <div class="card-body py-4">
+                <div class="fs-1 fw-bold text-primary">@Model.TotalRows</div>
+                <div class="text-muted">إجمالي الصفوف</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-success bg-opacity-10 text-center">
+            <div class="card-body py-4">
+                <div class="fs-1 fw-bold text-success">@Model.SuccessCount</div>
+                <div class="text-muted">أصول جديدة</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-danger bg-opacity-10 text-center">
+            <div class="card-body py-4">
+                <div class="fs-1 fw-bold text-danger">@Model.ErrorCount</div>
+                <div class="text-muted">أخطاء</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th><th>العقار</th><th>الموقع</th>
+                    <th>الكود</th><th>الحالة</th><th>ملاحظة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                <tr class="@(row.IsSuccess ? "" : "table-danger")">
+                    <td>@row.RowNumber</td>
+                    <td class="fw-semibold">@row.AssetName</td>
+                    <td class="text-muted">@row.Location</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(row.AssetCode))
+                        {<code class="text-primary">@row.AssetCode</code>}
+                    </td>
+                    <td>
+                        @if (row.IsSuccess)
+                        {<span class="badge bg-success">نجاح</span>}
+                        else
+                        {<span class="badge bg-danger">خطأ</span>}
+                    </td>
+                    <td class="text-muted">@row.ErrorMessage</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

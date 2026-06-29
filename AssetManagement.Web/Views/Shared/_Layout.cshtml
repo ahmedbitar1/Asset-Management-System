@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"]) - نظام إدارة الأصول</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <style>
+        * { font-family: "Cairo", sans-serif; }
+        body { background: #f0f2f5; }
+        .topbar { background: #1a56db; }
+        .sidebar { background: #1e3a5f; width: 220px; min-width: 220px; min-height: calc(100vh - 56px); }
+        .sidebar a { color: #94a3b8; display: flex; align-items: center; gap: 8px;
+            padding: 9px 14px; border-radius: 8px; margin: 3px 6px;
+            text-decoration: none; font-size: 14px; transition: all .2s; }
+        .sidebar a:hover { background: #2d5986; color: #fff; }
+        .sidebar a.active { background: #1a56db; color: #fff; }
+        .sidebar .sec { color: #64748b; font-size: 11px; padding: 10px 18px 4px; }
+        .main { flex: 1; padding: 20px; min-width: 0; overflow-x: hidden; }
+
+        @@media print {
+            .topbar, .sidebar, .no-print, .alert, .btn-close { display: none !important; }
+            body { background: #fff !important; }
+            .main { padding: 0 !important; }
+            .d-flex { display: block !important; }
+            .card { border: 1px solid #ddd !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar topbar sticky-top shadow-sm" style="height:56px;">
+    <div class="container-fluid">
+        <span class="text-white fw-bold">
+            <i class="bi bi-buildings me-2"></i>نظام إدارة الأصول
+        </span>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-white small"><i class="bi bi-person-circle me-1"></i>@User.Identity.Name</span>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-left me-1"></i>تسجيل الخروج
+                </button>
+            </form>
+        </div>
+        }
+    </div>
+</nav>
+<div class="d-flex" style="min-height:calc(100vh - 56px);">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+    <div class="sidebar">
+        <nav class="nav flex-column pt-2">
+            <div class="sec">الرئيسية</div>
+            <a asp-controller="Dashboard" asp-action="Index"
+               class="@(ViewContext.RouteData.Values["controller"]?.ToString()=="Dashboard"?"active":"")">
+                <i class="bi bi-speedometer2"></i>الرئيسية
+            </a>
+            <a asp-controller="Asset" asp-action="Index"
+               class="@(ViewContext.RouteData.Values["controller"]?.ToString()=="Asset"?"active":"")">
+                <i class="bi bi-building"></i>العقارات
+            </a>
+            @if (User.IsInRole("Legal") || User.IsInRole("SuperAdmin"))
+            {
+            <div class="sec">الأدوات</div>
+            <a asp-controller="AssetImport" asp-action="Index"
+               class="@(ViewContext.RouteData.Values["controller"]?.ToString()=="AssetImport"?"active":"")">
+                <i class="bi bi-file-earmark-excel"></i>استيراد Excel
+            </a>
+            }
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Finance") || User.IsInRole("Legal") || User.IsInRole("Marketing"))
+            {
+            <a asp-controller="Reports" asp-action="Index"
+               class="@(ViewContext.RouteData.Values["controller"]?.ToString()=="Reports"?"active":"")">
+                <i class="bi bi-bar-chart"></i>التقارير
+            </a>
+            <a asp-controller="Contracts" asp-action="Archive"
+               class="@(ViewContext.RouteData.Values["controller"]?.ToString()=="Contracts"?"active":"")">
+                <i class="bi bi-archive"></i>العقود
+            </a>
+            }
+            @if (User.IsInRole("SuperAdmin"))
+            {
+            <div class="sec">الإدارة</div>
+            <a asp-controller="Users" asp-action="Index"
+               class="@(ViewContext.RouteData.Values["controller"]?.ToString()=="Users"?"active":"")">
+                <i class="bi bi-people"></i>المستخدمون
+            </a>
+            }
+        </nav>
+    </div>
+    }
+    <div class="main">
+        @if (TempData["Success"] != null)
+        {
+        <div class="alert alert-success alert-dismissible fade show mb-3">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+        <div class="alert alert-danger alert-dismissible fade show mb-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        }
+        @RenderBody()
+    </div>
+</div>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

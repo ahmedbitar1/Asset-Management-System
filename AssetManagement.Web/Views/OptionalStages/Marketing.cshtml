@@ -1,0 +1,65 @@
+@{
+    var asset   = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    var images  = (List<string>)(ViewBag.Images ?? new List<string>());
+    var history = (List<AssetManagement.Domain.Entities.OptionalStageDetail>)(ViewBag.History ?? new List<AssetManagement.Domain.Entities.OptionalStageDetail>());
+    string prevAdText = ViewBag.PrevDetails ?? "";
+    string prevNotes  = ViewBag.PrevNotes   ?? "";
+    ViewData["Title"] = "مرحلة التسويق";
+}
+<div class="row justify-content-center">
+<div class="col-md-9">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header text-white fw-bold" style="background:#e67e22;">
+            <i class="bi bi-megaphone me-2"></i>مرحلة التسويق - @asset.AssetName
+            <code class="ms-2 small text-white opacity-75">@asset.AssetCode</code>
+        </div>
+        <div class="card-body">
+            <form asp-action="Marketing" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="assetId" value="@asset.Id"/>
+                <h6 class="fw-bold border-bottom pb-2 mb-3">
+                    <i class="bi bi-camera me-2 text-warning"></i>صور العقار
+                </h6>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">رفع صور جديدة</label>
+                    <input type="file" name="photos" class="form-control" accept=".jpg,.jpeg,.png,.webp" multiple/>
+                    @if (images.Any())
+                    {
+                    <div class="mt-2 row g-2">
+                        @foreach (var img in images.Take(6))
+                        {<div class="col-4 col-md-2">
+                            <img src="/uploads/assets/@asset.Id/@img" class="img-fluid rounded shadow-sm"
+                                 style="height:80px;width:100%;object-fit:cover;" alt="@asset.AssetCode"/>
+                        </div>}
+                        @if (images.Count > 6)
+                        {<div class="col-4 col-md-2 d-flex align-items-center justify-content-center bg-light rounded">
+                            <span class="text-muted small">+@(images.Count - 6) أخرى</span>
+                        </div>}
+                    </div>
+                    }
+                </div>
+                <h6 class="fw-bold border-bottom pb-2 mb-3">
+                    <i class="bi bi-file-text me-2 text-warning"></i>نص الإعلان
+                </h6>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">نص الإعلان</label>
+                    <textarea name="adText" class="form-control" rows="5"
+                              placeholder="اكتب نص الإعلان هنا...">@prevAdText</textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">ملاحظات</label>
+                    <textarea name="notes" class="form-control" rows="2"
+                              placeholder="ملاحظات إضافية...">@prevNotes</textarea>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn text-white fw-bold flex-grow-1" style="background:#e67e22;">
+                        <i class="bi bi-check-circle me-2"></i>حفظ
+                    </button>
+                    <a asp-controller="Asset" asp-action="Details" asp-route-id="@asset.Id"
+                       class="btn btn-outline-secondary">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>

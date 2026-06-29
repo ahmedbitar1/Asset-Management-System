@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "رفع الأصول";
+}
+<div class="row justify-content-center">
+<div class="col-md-7">
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-success text-white fw-bold">
+            <i class="bi bi-file-earmark-excel me-2"></i>استيراد العقارات من Excel
+        </div>
+        <div class="card-body">
+            <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">اختر ملف Excel (.xlsx)</label>
+                    <input type="file" name="file" class="form-control" accept=".xlsx" required/>
+                </div>
+                <button type="submit" class="btn btn-success w-100 py-2 fw-bold fs-5">
+                    <i class="bi bi-upload me-2"></i>رفع الأصول
+                </button>
+            </form>
+        </div>
+    </div>
+
+        <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light fw-bold">
+            <i class="bi bi-table me-2"></i>تنسيق أعمدة ملف Excel
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>العمود</th>
+                        <th>الحقل</th>
+                        <th>مطلوب؟</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A</td><td>المحافظة (City)</td><td><span class="badge bg-danger">مطلوب</span></td></tr>
+                    <tr><td>B</td><td>قسم / شياخة (District)</td><td><span class="badge bg-danger">مطلوب</span></td></tr>
+                    <tr><td>C</td><td>اسم الأصل</td><td><span class="badge bg-danger">مطلوب</span></td></tr>
+                    <tr><td>D</td><td>وصف الأصل</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>E</td><td>نوع العقار (محلات / شقق / أرض...)</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>F</td><td>مساحة الأرض (م²)</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>G</td><td>مساحة المباني (م²)</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>H</td><td>سند الملكية (عقد مسجل / عقد ابتدائي...)</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>I</td><td>ملك شركة</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>J</td><td>الموقف (مستغل / غير مستغل / مؤجر)</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>K</td><td>ملاحظات</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                    <tr><td>L</td><td>العروض السابقة</td><td><span class="badge bg-secondary">اختياري</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-light small text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            الأصول المكررة (Duplicate) تُتجاهل تلقائياً.
+        </div>
+    </div>
+</div>

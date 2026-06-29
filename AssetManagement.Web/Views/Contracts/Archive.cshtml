@@ -1,0 +1,83 @@
+@using AssetManagement.Domain.Entities
+@using AssetManagement.Domain.Enums
+@{
+    ViewData["Title"] = "أرشيف العقود";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-archive me-2 text-primary"></i>أرشيف العقود
+    </h4>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>رقم العقد</th>
+                        <th>العقار</th>
+                        <th>الطرف</th>
+                        <th>النوع</th>
+                        <th>المبلغ</th>
+                        <th>التاريخ</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @{
+                    var assets = ViewBag.AllAssets as List<Asset> ?? new List<Asset>();
+                    var allContracts = assets
+                        .Where(a => a.Contracts.Any())
+                        .SelectMany(a => a.Contracts.Select(c => new { Contract = c, Asset = a }))
+                        .OrderByDescending(x => x.Contract.CreatedAt)
+                        .ToList();
+                }
+                @foreach (var item in allContracts)
+                {
+                    var c = item.Contract;
+                    var a = item.Asset;
+                    <tr>
+                        <td><code>@c.ContractNumber</code></td>
+                        <td>
+                            <a asp-controller="Asset" asp-action="FullDetails" asp-route-id="@a.Id"
+                               class="fw-semibold text-decoration-none">@a.AssetName</a>
+                            <div class="text-muted" style="font-size:11px">@a.AssetCode</div>
+                        </td>
+                        <td>@c.PartyName</td>
+                        <td>
+                            <span class="badge @(c.ContractType==ContractType.Rent?"bg-info":"bg-success")">
+                                @c.ContractType
+                            </span>
+                        </td>
+                        <td class="fw-semibold text-success">EGP @c.Amount.ToString("N0")</td>
+                        <td class="text-muted small">@c.CreatedAt.ToString("yyyy/MM/dd")</td>
+                        <td>
+                            <a asp-controller="Contracts" asp-action="Details"
+                               asp-route-contractId="@c.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            
+                            <a asp-controller="Contracts" asp-action="DownloadWord"
+                               asp-route-contractId="@c.Id"
+                               class="btn btn-sm btn-success">
+                                <i class="bi bi-file-word"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!allContracts.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>لا توجد عقود بعد
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

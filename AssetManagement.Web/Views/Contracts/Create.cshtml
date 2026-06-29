@@ -1,0 +1,96 @@
+@model AssetManagement.Application.ViewModels.ContractViewModel
+@{
+    ViewData["Title"] = "Create Contract";
+}
+<div class="row justify-content-center">
+<div class="col-md-8">
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-primary text-white fw-bold">
+        <i class="bi bi-file-earmark-text me-2"></i>إنشاء عقد
+        <span class="ms-2 small opacity-75">@Model.AssetCode – @Model.AssetName</span>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post" id="contractForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="AssetId"/>
+            <input type="hidden" asp-for="AssetName"/>
+            <input type="hidden" asp-for="AssetCode"/>
+            <input type="hidden" asp-for="AssetLocation"/>
+            <input type="hidden" asp-for="AssetArea"/>
+            <input type="hidden" asp-for="AreaUnit"/>
+            <input type="hidden" asp-for="RentalRequestId"/>
+            <input type="hidden" asp-for="SaleRequestId"/>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">نوع العقد</label>
+                <select asp-for="ContractType" class="form-select" id="contractType">
+                    <option value="Rent">Rent – إيجار</option>
+                    <option value="Sale">Sale – بيع</option>
+                </select>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">* اسم الطرف</label>
+                    <input asp-for="PartyName" class="form-control" required placeholder="الاسم الكامل"/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">* الهاتف</label>
+                    <input asp-for="PartyPhone" class="form-control" required placeholder="رقم الهاتف"/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">* رقم الهوية</label>
+                    <input asp-for="PartyIdNumber" class="form-control" required placeholder="رقم الهوية"/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">* المبلغ (جنيه)</label>
+                    <input asp-for="Amount" class="form-control" type="number" step="1" min="1"
+                           required placeholder="المبلغ"/>
+                </div>
+                <div class="col-md-6" id="startDateDiv">
+                    <label class="form-label fw-semibold">تاريخ البداية</label>
+                    <input asp-for="StartDate" class="form-control" type="date"/>
+                </div>
+                <div class="col-md-6" id="endDateDiv">
+                    <label class="form-label fw-semibold">تاريخ الانتهاء</label>
+                    <input asp-for="EndDate" class="form-control" type="date"/>
+                </div>
+            </div>
+
+            @if (Model.Amount > 0 || !string.IsNullOrEmpty(Model.PartyName))
+            {
+            <div class="alert alert-info mt-3 small">
+                <i class="bi bi-info-circle me-2"></i>
+                بيانات مدخلة: <strong>@Model.PartyName</strong> – EGP <strong>@Model.Amount.ToString("N0")</strong>
+            </div>
+            }
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary flex-grow-1 fw-bold">
+                    <i class="bi bi-file-earmark-check me-2"></i>إنشاء وحفظ العقد
+                </button>
+                <a asp-controller="Asset" asp-action="Details" asp-route-id="@Model.AssetId"
+                   class="btn btn-outline-secondary">إلغاء</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+</div>
+
+@section Scripts {
+<script>
+function toggleDates() {
+    var type = document.getElementById('contractType').value;
+    var endDiv = document.getElementById('endDateDiv');
+    if (type === 'Sale') {
+        endDiv.style.display = 'none';
+        endDiv.querySelector('input').value = '';
+    } else {
+        endDiv.style.display = '';
+    }
+}
+document.getElementById('contractType').addEventListener('change', toggleDates);
+toggleDates();
+</script>
+}

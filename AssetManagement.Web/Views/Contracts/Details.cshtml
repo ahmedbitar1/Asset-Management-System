@@ -1,0 +1,90 @@
+@{
+    ViewData["Title"] = "Contract Details";
+    var asset    = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    var contract = (AssetManagement.Domain.Entities.Contract)ViewBag.Contract;
+    bool isSale  = contract.ContractType == AssetManagement.Domain.Enums.ContractType.Sale;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h5 class="fw-bold mb-1">
+            <i class="bi bi-file-earmark-text me-2 text-primary"></i>@contract.ContractNumber
+        </h5>
+        <span class="text-muted small">@asset.AssetName – @asset.AssetCode</span>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        @* <a asp-controller="Contracts" asp-action="Print" asp-route-contractId="@contract.Id"
+           class="btn btn-outline-secondary" target="_blank">
+            <i class="bi bi-printer me-1"></i>Print
+        </a> *@
+        <a asp-controller="Contracts" asp-action="DownloadWord" asp-route-contractId="@contract.Id"
+           class="btn btn-success">
+            <i class="bi bi-file-earmark-word me-1"></i>تحميل Word
+        </a>
+        <a asp-controller="Asset" asp-action="FullDetails" asp-route-id="@asset.Id"
+           class="btn btn-outline-primary">
+            <i class="bi bi-building me-1"></i>تفاصيل العقار
+        </a>
+        <a asp-controller="Contracts" asp-action="Archive"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-archive me-1"></i>كل العقود
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+<div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white fw-bold">
+            <i class="bi bi-file-earmark-text me-2"></i>بيانات العقد
+        </div>
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <tr><td class="text-muted fw-semibold">رقم العقد</td><td><code>@contract.ContractNumber</code></td></tr>
+                <tr><td class="text-muted fw-semibold">النوع</td>
+                    <td><span class="badge @(isSale?"bg-success":"bg-info")">@contract.ContractType</span></td></tr>
+                <tr><td class="text-muted fw-semibold">الحالة</td>
+                    <td><span class="badge bg-secondary">@contract.Status</span></td></tr>
+                <tr><td class="text-muted fw-semibold">المبلغ</td>
+                    <td class="fw-bold text-success">EGP @contract.Amount.ToString("N0")</td></tr>
+                <tr><td class="text-muted fw-semibold">التاريخ</td>
+                    <td>@contract.CreatedAt.ToString("yyyy/MM/dd HH:mm")</td></tr>
+                @if (!isSale)
+                {
+                <tr><td class="text-muted fw-semibold">تاريخ البداية</td>
+                    <td>@contract.StartDate?.ToString("yyyy/MM/dd")</td></tr>
+                <tr><td class="text-muted fw-semibold">تاريخ الانتهاء</td>
+                    <td>@contract.EndDate?.ToString("yyyy/MM/dd")</td></tr>
+                }
+            </table>
+        </div>
+    </div>
+</div>
+<div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-info text-white fw-bold">
+            <i class="bi bi-person me-2"></i>@(isSale ? "بيانات المشتري" : "بيانات المستأجر")
+        </div>
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <tr><td class="text-muted fw-semibold">الاسم</td><td class="fw-semibold">@contract.PartyName</td></tr>
+                <tr><td class="text-muted fw-semibold">الهاتف</td><td>@contract.PartyPhone</td></tr>
+                <tr><td class="text-muted fw-semibold">رقم الهوية</td><td>@contract.PartyIdNumber</td></tr>
+            </table>
+        </div>
+    </div>
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-warning bg-opacity-75 fw-bold">
+            <i class="bi bi-building me-2"></i>بيانات العقار
+        </div>
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <tr><td class="text-muted fw-semibold">الاسم</td><td>@asset.AssetName</td></tr>
+                <tr><td class="text-muted fw-semibold">الموقع</td><td>@asset.Location – @asset.City</td></tr>
+                <tr><td class="text-muted fw-semibold">المساحة</td>
+                    <td>@(asset.Area.HasValue ? asset.Area.Value.ToString("N0") + " " + asset.AreaUnit : "-")</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+</div>

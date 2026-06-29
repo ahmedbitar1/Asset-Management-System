@@ -1,0 +1,65 @@
+﻿@{
+    var asset = (AssetManagement.Domain.Entities.Asset)ViewBag.Asset;
+    ViewData["Title"] = "مرحلة الهندسة";
+}
+<div class="row justify-content-center">
+<div class="col-md-9">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header text-white fw-bold" style="background:#2980b9;">
+            <i class="bi bi-rulers me-2"></i>مرحلة الهندسة - @asset.AssetName
+        </div>
+        <div class="card-body">
+            <form asp-action="Engineering" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="assetId" value="@asset.Id"/>
+                <h6 class="fw-bold border-bottom pb-2 mb-3">
+                    <i class="bi bi-building me-2 text-primary"></i>مواصفات المبنى
+                </h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">نوع المبنى</label>
+                        <select name="buildingType" class="form-select">
+                            <option value="">-- اختر --</option>
+                            @foreach (var opt in new[]{("Residential","سكني"),("Commercial","تجاري"),("Industrial","صناعي"),("Mixed Use","متعدد الاستخدامات"),("Land","أرض / قطعة")})
+                            {
+                                if (ViewBag.PrevBuildingType == opt.Item1)
+                                { <option value="@opt.Item1" selected>@opt.Item2</option> }
+                                else
+                                { <option value="@opt.Item1">@opt.Item2</option> }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">المساحة المبنية (م²)</label>
+                        <input type="text" name="area" class="form-control" placeholder="مثال: 250 م²" value="@ViewBag.PrevArea"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">تفاصيل الهيكل والإنشاء</label>
+                        <textarea name="structure" class="form-control" rows="4"
+                                  placeholder="عدد الطوابق، نوع الإنشاء، عمر المبنى، الحالة الحالية...">@ViewBag.PrevStructure</textarea>
+                    </div>
+                </div>
+                <h6 class="fw-bold border-bottom pb-2 mb-3">
+                    <i class="bi bi-file-earmark-image me-2 text-primary"></i>الرسومات الهندسية
+                </h6>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">رفع المخططات الهندسية</label>
+                    <input type="file" name="drawings" class="form-control" multiple accept=".jpg,.jpeg,.png,.pdf,.dwg"/>
+                    <div class="form-text">ارفع المخططات والرسومات الهندسية</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">ملاحظات هندسية</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات هندسية إضافية...">@ViewBag.PrevNotes</textarea>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn text-white fw-bold flex-grow-1" style="background:#2980b9;">
+                        <i class="bi bi-check-circle me-2"></i>إكمال المرحلة الهندسية
+                    </button>
+                    <a asp-controller="Asset" asp-action="Details" asp-route-id="@asset.Id"
+                       class="btn btn-outline-secondary">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
