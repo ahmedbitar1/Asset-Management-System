@@ -56,6 +56,11 @@ namespace AssetManagement.Web.Controllers
 
             var asset = await _repo.GetByIdAsync(assetId);
             if (asset == null) return NotFound();
+            if (asset.CurrentStage != 8)
+            {
+                TempData["Error"] = "\u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0628\u0627\u0644\u0641\u0639\u0644 \u0623\u0648 \u0623\u0646 \u0627\u0644\u0623\u0635\u0644 \u0644\u064a\u0633 \u0641\u064a \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629 \u0644\u0647";
+                return RedirectToAction("Details", "Asset", new { id = assetId });
+            }
 
             var contract = asset.Contracts.OrderByDescending(c => c.CreatedAt).FirstOrDefault();
             if (contract == null)

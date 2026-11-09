@@ -84,38 +84,32 @@ namespace AssetManagement.Web.Controllers
             if (stage.HasValue) filtered = filtered.Where(a => a.CurrentStage == stage.Value);
             var assets = filtered.OrderBy(a => a.AssetCode).ToList();
 
+            // نفس أعمدة وترتيب شيت الاستيراد بالظبط (12 عمود) عشان يتعمله استيراد تاني بدون تعديل
             using var wb = new XLWorkbook();
-            var ws = wb.Worksheets.Add("Assets");
-            var headers = new[] { "Code","Name","City","District","PropertyType","LandArea","BuildingArea",
-                "DeedType","OwnerCompany","OccupancyStatus","Type","Stage","Status",
-                "PurchasePrice","CurrentValue","CreatedAt" };
+            var ws = wb.Worksheets.Add("Sheet1");
+            var headers = new[] { "\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0647", "\u0642\u0633\u0645 / \u0634\u064a\u0627\u062e\u0647", "\u0627\u0633\u0645 \u0627\u0644\u0627\u0635\u0644", "\u0648\u0635\u0641 \u0627\u0644\u0627\u0635\u0644", "\u0646\u0648\u0639 \u0627\u0644\u0639\u0642\u0627\u0631", "\u0645\u0633\u0627\u062d\u0647 \u0627\u0644\u0627\u0631\u0636 \u0628\u0627\u0644\u0645\u062a\u0631 \u062a\u0642\u0631\u064a\u0628\u0627", "\u0645\u0633\u0627\u062d\u0647 \u0627\u0644\u0645\u0628\u0627\u0646\u0649 \u06452 \u062a\u0642\u0631\u064a\u0628\u0627", "\u0633\u0646\u062f \u0627\u0644\u0645\u0644\u0643\u064a\u0647", "\u0645\u0644\u0643 \u0634\u0631\u0643\u0647", "\u0627\u0644\u0645\u0648\u0642\u0641", "\u0645\u0644\u0627\u062d\u0638\u0627\u062a", "\u0627\u0644\u0639\u0631\u0648\u0636 \u0627\u0644\u0633\u0627\u0628\u0642\u0647" };
             for (int i = 0; i < headers.Length; i++)
             {
-                ws.Cell(1, i+1).Value = headers[i];
-                ws.Cell(1, i+1).Style.Font.Bold = true;
-                ws.Cell(1, i+1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1a56db");
-                ws.Cell(1, i+1).Style.Font.FontColor = XLColor.White;
+                ws.Cell(1, i + 1).Value = headers[i];
+                ws.Cell(1, i + 1).Style.Font.Bold = true;
+                ws.Cell(1, i + 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#1a56db");
+                ws.Cell(1, i + 1).Style.Font.FontColor = XLColor.White;
             }
             for (int i = 0; i < assets.Count; i++)
             {
                 var a = assets[i]; int r = i + 2;
-                ws.Cell(r,1).Value  = a.AssetCode;
-                ws.Cell(r,2).Value  = a.AssetName;
-                ws.Cell(r,3).Value  = a.City ?? "";
-                ws.Cell(r,4).Value  = a.District ?? "";
-                ws.Cell(r,5).Value  = a.PropertyType ?? "";
-                ws.Cell(r,6).Value  = a.LandArea.HasValue ? (double)a.LandArea.Value : 0;
-                ws.Cell(r,7).Value  = a.BuildingArea.HasValue ? (double)a.BuildingArea.Value : 0;
-                ws.Cell(r,8).Value  = a.DeedType ?? "";
-                ws.Cell(r,9).Value  = a.OwnerCompany ?? "";
-                ws.Cell(r,10).Value = a.OccupancyStatus ?? "";
-                ws.Cell(r,11).Value = a.AssetType.ToString();
-                ws.Cell(r,12).Value = a.CurrentStage;
-                ws.Cell(r,13).Value = a.Status.ToString();
-                ws.Cell(r,14).Value = a.PurchasePrice.HasValue ? (double)a.PurchasePrice.Value : 0;
-                ws.Cell(r,15).Value = a.CurrentValue.HasValue  ? (double)a.CurrentValue.Value  : 0;
-                ws.Cell(r,16).Value = a.CreatedAt.ToString("yyyy/MM/dd");
-                if (i % 2 == 0) ws.Row(r).Style.Fill.BackgroundColor = XLColor.FromHtml("#f8faff");
+                ws.Cell(r, 1).Value  = a.City ?? "";
+                ws.Cell(r, 2).Value  = a.District ?? "";
+                ws.Cell(r, 3).Value  = a.AssetName ?? "";
+                ws.Cell(r, 4).Value  = a.AssetDescription ?? "";
+                ws.Cell(r, 5).Value  = a.PropertyType ?? "";
+                if (a.LandArea.HasValue)     ws.Cell(r, 6).Value = (double)a.LandArea.Value;
+                if (a.BuildingArea.HasValue) ws.Cell(r, 7).Value = (double)a.BuildingArea.Value;
+                ws.Cell(r, 8).Value  = a.DeedType ?? "";
+                ws.Cell(r, 9).Value  = a.OwnerCompany ?? "";
+                ws.Cell(r, 10).Value = a.OccupancyStatus ?? "";
+                ws.Cell(r, 11).Value = a.Notes ?? "";
+                ws.Cell(r, 12).Value = a.PreviousOffers ?? "";
             }
             ws.Columns().AdjustToContents();
             using var ms = new MemoryStream();

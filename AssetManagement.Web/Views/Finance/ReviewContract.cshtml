@@ -70,6 +70,59 @@
         </div>
     </div>
     }
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-info bg-opacity-10 fw-bold">
+            <i class="bi bi-file-text me-2 text-info"></i>طلبات الإيجار / البيع على هذا الأصل
+        </div>
+        <div class="card-body p-0">
+            @{
+                var allRentals = asset.RentalRequests.OrderByDescending(x => x.CreatedAt).ToList();
+                var allSales   = asset.SaleRequests.OrderByDescending(x => x.CreatedAt).ToList();
+            }
+            @if (!allRentals.Any() && !allSales.Any())
+            {
+                <div class="p-3 text-muted small">لا توجد طلبات مسجلة</div>
+            }
+            @foreach (var r in allRentals)
+            {
+            <div class="p-3 border-bottom small">
+                <div class="fw-semibold text-info mb-1">
+                    <i class="bi bi-house-door me-1"></i>طلب إيجار
+                    <span class="text-muted fw-normal ms-2">@r.CreatedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                    @if (r == allRentals.First() && (!allSales.Any() || r.CreatedAt >= allSales.First().CreatedAt))
+                    {<span class="badge bg-success ms-2">الطلب الحالي</span>}
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-4"><span class="text-muted">المستأجر:</span> <strong>@r.TenantName</strong></div>
+                    <div class="col-md-4"><span class="text-muted">الهاتف:</span> @r.TenantPhone</div>
+                    <div class="col-md-4"><span class="text-muted">الإيجار الشهري:</span> <strong class="text-success">@r.ProposedRent.ToString("N0") EGP</strong></div>
+                    <div class="col-md-4"><span class="text-muted">المدة:</span> @(r.ContractDurationYears.HasValue ? r.ContractDurationYears + " سنة" : r.RentDurationMonths + " شهر")</div>
+                    <div class="col-md-4"><span class="text-muted">التأمين:</span> @(r.SecurityDeposit.HasValue ? r.SecurityDeposit.Value.ToString("N0") + " EGP" : "—")</div>
+                    <div class="col-md-4"><span class="text-muted">الزيادة السنوية:</span> @(r.AnnualIncrease.HasValue ? r.AnnualIncrease.Value + "%" : "—")</div>
+                    <div class="col-md-4"><span class="text-muted">فترة السماح:</span> @(r.GracePeriod.HasValue ? r.GracePeriod.Value + " شهر" : "—")</div>
+                    <div class="col-md-4"><span class="text-muted">البداية:</span> @r.StartDate?.ToString("yyyy/MM/dd")</div>
+                </div>
+            </div>
+            }
+            @foreach (var s in allSales)
+            {
+            <div class="p-3 border-bottom small">
+                <div class="fw-semibold text-success mb-1">
+                    <i class="bi bi-cash-coin me-1"></i>طلب بيع
+                    <span class="text-muted fw-normal ms-2">@s.CreatedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                    @if (s == allSales.First() && (!allRentals.Any() || s.CreatedAt > allRentals.First().CreatedAt))
+                    {<span class="badge bg-success ms-2">الطلب الحالي</span>}
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-4"><span class="text-muted">المشتري:</span> <strong>@s.BuyerName</strong></div>
+                    <div class="col-md-4"><span class="text-muted">الهاتف:</span> @s.BuyerPhone</div>
+                    <div class="col-md-4"><span class="text-muted">السعر:</span> <strong class="text-success">@s.OfferedPrice.ToString("N0") EGP</strong></div>
+                    <div class="col-md-4"><span class="text-muted">طريقة الدفع:</span> @s.PaymentMethod</div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
 </div>
 <div class="col-md-4">
     <div class="card border-0 shadow-sm mb-3 border-success border-2">

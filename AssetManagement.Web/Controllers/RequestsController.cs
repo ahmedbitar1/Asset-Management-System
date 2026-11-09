@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace AssetManagement.Web.Controllers
 {
-    [Authorize(Roles = "Marketing,Finance,SuperAdmin")]
+    [Authorize]
     public class RequestsController : Controller
     {
         private readonly IAssetRepository _repo;
@@ -23,10 +23,16 @@ namespace AssetManagement.Web.Controllers
 
         // â”€â”€ GET: طلب إيجار â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         [HttpGet]
+        [Authorize(Roles = "Marketing,SuperAdmin")]
         public async Task<IActionResult> CreateRental(int assetId)
         {
             var asset = await _repo.GetByIdAsync(assetId);
             if (asset == null) return NotFound();
+            if (asset.CurrentStage != 4)
+            {
+                TempData["Error"] = "\u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0628\u0627\u0644\u0641\u0639\u0644 \u0623\u0648 \u0623\u0646 \u0627\u0644\u0623\u0635\u0644 \u0644\u064a\u0633 \u0641\u064a \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629 \u0644\u0647";
+                return RedirectToAction("Details", "Asset", new { id = assetId });
+            }
 
             var vm = new RentalRequestViewModel
             {
@@ -43,6 +49,7 @@ namespace AssetManagement.Web.Controllers
 
         // â”€â”€ POST: طلب إيجار â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         [HttpPost][ValidateAntiForgeryToken]
+        [Authorize(Roles = "Marketing,SuperAdmin")]
         public async Task<IActionResult> CreateRental(RentalRequestViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -54,6 +61,11 @@ namespace AssetManagement.Web.Controllers
             }
             var asset = await _repo.GetByIdAsync(vm.AssetId);
             if (asset == null) return NotFound();
+            if (asset.CurrentStage != 4)
+            {
+                TempData["Error"] = "\u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0628\u0627\u0644\u0641\u0639\u0644 \u0623\u0648 \u0623\u0646 \u0627\u0644\u0623\u0635\u0644 \u0644\u064a\u0633 \u0641\u064a \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629 \u0644\u0647";
+                return RedirectToAction("Details", "Asset", new { id = vm.AssetId });
+            }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             int durationMonths = vm.ContractDurationYears * 12;
@@ -112,10 +124,16 @@ namespace AssetManagement.Web.Controllers
 
         // â”€â”€ GET: طلب بيع â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         [HttpGet]
+        [Authorize(Roles = "Marketing,SuperAdmin")]
         public async Task<IActionResult> CreateSale(int assetId)
         {
             var asset = await _repo.GetByIdAsync(assetId);
             if (asset == null) return NotFound();
+            if (asset.CurrentStage != 4)
+            {
+                TempData["Error"] = "\u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0628\u0627\u0644\u0641\u0639\u0644 \u0623\u0648 \u0623\u0646 \u0627\u0644\u0623\u0635\u0644 \u0644\u064a\u0633 \u0641\u064a \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629 \u0644\u0647";
+                return RedirectToAction("Details", "Asset", new { id = assetId });
+            }
 
             // السعر الافتراضي: متوسط التقييمات إن وجدت
             decimal defaultPrice = 0;
@@ -137,6 +155,7 @@ namespace AssetManagement.Web.Controllers
 
         // â”€â”€ POST: طلب بيع â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         [HttpPost][ValidateAntiForgeryToken]
+        [Authorize(Roles = "Marketing,SuperAdmin")]
         public async Task<IActionResult> CreateSale(SaleRequestViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -148,6 +167,11 @@ namespace AssetManagement.Web.Controllers
             }
             var asset = await _repo.GetByIdAsync(vm.AssetId);
             if (asset == null) return NotFound();
+            if (asset.CurrentStage != 4)
+            {
+                TempData["Error"] = "\u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0628\u0627\u0644\u0641\u0639\u0644 \u0623\u0648 \u0623\u0646 \u0627\u0644\u0623\u0635\u0644 \u0644\u064a\u0633 \u0641\u064a \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629 \u0644\u0647";
+                return RedirectToAction("Details", "Asset", new { id = vm.AssetId });
+            }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var req = new SaleRequest
@@ -198,6 +222,7 @@ namespace AssetManagement.Web.Controllers
 
         // â”€â”€ Print: طباعة الطلب مع التقييمات â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         [HttpGet]
+        [Authorize(Roles = "Marketing,Finance,SuperAdmin")]
         public async Task<IActionResult> PrintRequest(int assetId)
         {
             var asset = await _repo.GetByIdAsync(assetId);

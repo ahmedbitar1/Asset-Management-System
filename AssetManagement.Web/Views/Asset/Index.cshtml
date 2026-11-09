@@ -174,7 +174,7 @@ else
                                 <i class="bi bi-pencil-square"></i>
                             </a>
                             }
-                            @if (User.IsInRole("SuperAdmin"))
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Legal"))
                             {
                             <button type="button" class="btn btn-sm btn-outline-danger" title="حذف"
                                     onclick="confirmDeleteOne(@a.Id, '@a.AssetName.Replace("'", "\'")' )">
