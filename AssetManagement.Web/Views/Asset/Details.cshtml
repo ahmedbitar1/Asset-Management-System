@@ -62,7 +62,7 @@
             <i class="bi bi-pencil-square me-1"></i>تعديل
         </a>
         }
-        @if (isSuperAdmin)
+        @if (isSuperAdmin || roles.Contains("Legal"))
         {
         <button type="button" class="btn btn-sm btn-danger"
                 onclick="confirmDelete(@a.Id,'@a.AssetName.Replace("'","\'")' )">
@@ -339,7 +339,7 @@
     </div>
     }
 
-    @if (a.CurrentStage == 6 && isLegal && !a.Contracts.Any())
+    @if (a.CurrentStage == 6 && isLegal && !a.Contracts.Any(c => c.Status != ContractStatus.Terminated))
     {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-primary bg-opacity-10 fw-bold">
@@ -406,7 +406,7 @@
     {
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-primary bg-opacity-10 fw-bold">
-            <i class="bi bi-file-earmark-word me-2"></i>@a.Contracts.First().ContractNumber
+            <i class="bi bi-file-earmark-word me-2"></i>@a.Contracts.OrderByDescending(c => c.CreatedAt).First().ContractNumber
         </div>
         <div class="card-body">
             <a asp-controller="Contracts" asp-action="DownloadWord"

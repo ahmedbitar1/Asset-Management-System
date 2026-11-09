@@ -33,9 +33,8 @@ namespace AssetManagement.Web.Controllers
         {
             var user  = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(user!);
-            IEnumerable<Asset> assets = roles.Contains("SuperAdmin") || roles.Contains("Legal") || roles.Contains("Board_High") || roles.Contains("Finance") || roles.Contains("Marketing") || roles.Contains("Board_High")
-                ? await _repo.GetAllAsync()
-                : await _workflow.GetAssetsByRoleAsync(user!.Id, roles);
+            // صفحة العقارات: كل الأدوار تشوف كل العقارات (المهام حسب المرحلة بتظهر في الرئيسية)
+            IEnumerable<Asset> assets = await _repo.GetAllAsync();
 
             if (!string.IsNullOrWhiteSpace(search))
                 assets = assets.Where(a =>
@@ -54,7 +53,7 @@ namespace AssetManagement.Web.Controllers
             ViewBag.Search       = search;
             ViewBag.Status       = status;
             ViewBag.Stage        = stage;
-            ViewBag.IsSuperAdmin = roles.Contains("SuperAdmin") || roles.Contains("Legal") || roles.Contains("Board_High") || roles.Contains("Finance") || roles.Contains("Marketing") || roles.Contains("Board_High");
+            ViewBag.IsSuperAdmin = roles.Contains("SuperAdmin");
 
             var cards = assets.Select(a => new AssetCardViewModel
             {
@@ -96,7 +95,7 @@ namespace AssetManagement.Web.Controllers
 
             var user  = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(user!);
-            bool isSuperAdmin = roles.Contains("SuperAdmin") || roles.Contains("Legal") || roles.Contains("Board_High") || roles.Contains("Finance") || roles.Contains("Marketing") || roles.Contains("Board_High");
+            bool isSuperAdmin = roles.Contains("SuperAdmin");
             bool canAct = isSuperAdmin ||
                 (StageDefinition.StageRoles.TryGetValue(asset.CurrentStage, out var sr)
                  && sr.Any(r => roles.Contains(r)));
@@ -171,6 +170,11 @@ namespace AssetManagement.Web.Controllers
         [HttpPost][ValidateAntiForgeryToken]
         public async Task<IActionResult> Advance(int id, string? notes)
         {
+            if (!await CanActAsync(id))
+            {
+                TempData["Error"] = "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0635\u0644\u0627\u062d\u064a\u0629 \u062a\u0646\u0641\u064a\u0630 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0641\u064a \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629";
+                return RedirectToAction("Details", new { id });
+            }
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var (ok, msg) = await _workflow.AdvanceStageAsync(id, userId, notes);
             TempData[ok ? "Success" : "Error"] = msg;
@@ -181,10 +185,29 @@ namespace AssetManagement.Web.Controllers
         [HttpPost][ValidateAntiForgeryToken]
         public async Task<IActionResult> Reject(int id, string reason)
         {
+            if (!await CanActAsync(id, rejectOnly: true))
+            {
+                TempData["Error"] = "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0635\u0644\u0627\u062d\u064a\u0629 \u062a\u0646\u0641\u064a\u0630 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0641\u064a \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629";
+                return RedirectToAction("Details", new { id });
+            }
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var (ok, msg) = await _workflow.RejectStageAsync(id, userId, reason);
             TempData[ok ? "Success" : "Error"] = msg;
             return RedirectToAction("Details", new { id });
+        }
+
+        // تحقق السيرفر: المستخدم دوره مسموح له بالمرحلة الحالية (أو SuperAdmin)
+        private async Task<bool> CanActAsync(int assetId, bool rejectOnly = false)
+        {
+            var asset = await _workflow.GetAssetDetailAsync(assetId);
+            if (asset == null) return false;
+            var user  = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(user!);
+            if (rejectOnly && asset.CurrentStage is not (5 or 7)) return false;
+            if (roles.Contains("SuperAdmin")) return true;
+            if (!rejectOnly && asset.CurrentStage == 2 && !roles.Contains("Marketing")) return false;
+            return StageDefinition.StageRoles.TryGetValue(asset.CurrentStage, out var sr)
+                   && sr.Any(r => roles.Contains(r));
         }
 
         // ── Complete Optional ─────────────────────────────────────
@@ -216,7 +239,7 @@ namespace AssetManagement.Web.Controllers
 
         // ── Delete ALL (SuperAdmin only) — \u0645\u0639 \u0625\u0639\u0627\u062f\u0629 \u062a\u0635\u0641\u064a\u0631 Identity ─────
         [HttpPost][ValidateAntiForgeryToken]
-        [Authorize(Roles = "SuperAdmin,Legal")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> DeleteAll()
         {
             // 1. \u0645\u0639\u0627\u0644\u062c\u0629 Restrict FKs \u0623\u0648\u0644\u0627\u064b

@@ -81,9 +81,14 @@ namespace AssetManagement.Application.Services
             int toStage;
             string action;
 
-            if (from == 5)
+            if (from == 5 || from == 7)
             {
-                // رفض الاعتماد — الرجوع لمرحلة 4 لعمل طلب جديد
+                // رفض الاعتماد (5) أو رفض المالية للعقد (7) — الرجوع لمرحلة 4 لعمل طلب جديد
+                if (from == 7)
+                {
+                    var rejectedContract = asset.Contracts.OrderByDescending(c => c.CreatedAt).FirstOrDefault();
+                    if (rejectedContract != null) rejectedContract.Status = ContractStatus.Terminated;
+                }
                 toStage      = 4;
                 action       = "Rejected";
                 asset.Status = AssetStatus.Pending;
@@ -116,7 +121,7 @@ namespace AssetManagement.Application.Services
             });
             await _repo.SaveChangesAsync();
 
-            string msg = from == 5
+            string msg = (from == 5 || from == 7)
                 ? "\u062a\u0645 \u0631\u0641\u0636 \u0627\u0644\u0637\u0644\u0628 \u0648\u0639\u0627\u062f \u0627\u0644\u0623\u0635\u0644 \u0644\u0645\u0631\u062d\u0644\u0629 4 \u0644\u0639\u0645\u0644 \u0637\u0644\u0628 \u062c\u062f\u064a\u062f"
                 : "\u062a\u0645 \u0631\u0641\u0636 \u0627\u0644\u0623\u0635\u0644 \u0628\u0646\u062c\u0627\u062d";
             return (true, msg);
