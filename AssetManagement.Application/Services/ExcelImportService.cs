@@ -32,6 +32,9 @@ namespace AssetManagement.Application.Services
         private static readonly string K_COST     = NormAr("\u0627\u0644\u062a\u0643\u0644\u0641\u0629");
         private static readonly string K_OFFER    = NormAr("\u0627\u062e\u0631 \u0639\u0631\u0636");
         private static readonly string K_COMPANY  = NormAr("\u0627\u0644\u0634\u0631\u0643\u0629");
+        private static readonly string K_RENTVAL = NormAr("\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u0627\u064a\u062c\u0627\u0631");
+        private static readonly string K_YIELD   = NormAr("\u0627\u0644\u0639\u0627\u0626\u062f \u0627\u0644\u0633\u0646\u0648\u064a");
+        private static readonly string K_MARKET  = NormAr("\u0627\u0644\u0642\u064a\u0645\u0629 \u0627\u0644\u0633\u0648\u0642\u064a\u0629 \u0648\u0641\u0642\u0627 \u0644\u0644\u0627\u0633\u0627\u0633");
         private const string FEDDAN = "\u0641\u062f\u0627\u0646";
         private const decimal FEDDAN_M2 = 4200.83m;
 
@@ -40,7 +43,7 @@ namespace AssetManagement.Application.Services
         {
             public ExcelWorksheet Sheet = null!;
             public int FirstRow;
-            public int City, District, Name, Desc, PType, Land, Build, Deed, Owner, Occup, Notes, Offers, Cost;
+            public int City, District, Name, Desc, PType, Land, Build, Deed, Owner, Occup, Notes, Offers, Cost, Rent, Yield, Market;
             public bool IsUnitsSheet;          // شكل "بالتقييمات"
             public string? RepeatedHeaderKey;  // صفوف العناوين المكررة جوه الشيت
         }
@@ -93,6 +96,9 @@ namespace AssetManagement.Application.Services
                 string? occupancySt  = Txt(ws, row, layout.Occup);
                 string? prevOffers   = Txt(ws, row, layout.Offers);
                 decimal? cost        = Money(ws, row, layout.Cost);
+                decimal? rentVal     = Money(ws, row, layout.Rent);
+                decimal? annualYield = Money(ws, row, layout.Yield);
+                decimal? marketVal   = Money(ws, row, layout.Market);
 
                 // المساحات
                 string? landRaw  = Raw(ws, row, layout.Land);
@@ -164,6 +170,9 @@ namespace AssetManagement.Application.Services
                         Notes            = notes,
                         PreviousOffers   = prevOffers,
                         PurchasePrice    = cost,
+                        RentalValuation  = rentVal,
+                        AnnualYield      = annualYield,
+                        MarketValue      = marketVal,
                         AssetType        = AssetType.Both,
                         Status           = leased ? AssetStatus.Rented : AssetStatus.Pending,
                         CurrentStage     = leased ? 10 : 2,
@@ -263,6 +272,9 @@ namespace AssetManagement.Application.Services
                             Occup = Find(h, k => k == K_STATUS),
                             Offers = Find(h, k => k.StartsWith(K_OFFER)),
                             Cost = Find(h, k => k == K_COST),
+                            Rent = Find(h, k => k.StartsWith(K_RENTVAL)),
+                            Yield = Find(h, k => k.StartsWith(K_YIELD)),
+                            Market = Find(h, k => k.StartsWith(K_MARKET)),
                             IsUnitsSheet = true,
                             RepeatedHeaderKey = NormAr(ws.Cells[r, building].Text)
                         };

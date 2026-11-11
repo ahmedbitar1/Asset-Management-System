@@ -45,6 +45,9 @@ namespace AssetManagement.Domain.Entities
         public DateTime? PurchaseDate  { get; set; }
         public decimal?  PurchasePrice { get; set; }
         public decimal?  CurrentValue  { get; set; }
+        public decimal?  RentalValuation { get; set; }  // Rent valuation (from Excel)
+        public decimal?  AnnualYield     { get; set; }  // Annual return (from Excel)
+        public decimal?  MarketValue     { get; set; }  // Market value per chosen basis (from Excel)
 
         // â”€â”€ Ø§Ù„ØªØµÙ†ÙŠÙ ÙˆØ³ÙŠØ± Ø§Ù„Ø¹Ù…Ù„ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         public AssetType   AssetType    { get; set; } = AssetType.Both;
