@@ -45,6 +45,9 @@ namespace AssetManagement.Infrastructure.Data
                 e.Property(x => x.BuildingArea  ).HasColumnType("decimal(18,2)");
                 e.Property(x => x.PurchasePrice ).HasColumnType("decimal(18,2)");
                 e.Property(x => x.CurrentValue  ).HasColumnType("decimal(18,2)");
+                e.Property(x => x.RentalValuation).HasColumnType("decimal(18,2)");
+                e.Property(x => x.AnnualYield    ).HasColumnType("decimal(18,2)");
+                e.Property(x => x.MarketValue    ).HasColumnType("decimal(18,2)");
                 // PropertyType: nvarchar(200) â€” Ù„ÙŠØ³ nvarchar(max)
                 e.Property(x => x.PropertyType  ).HasMaxLength(200);
                 e.Property(x => x.DeedType      ).HasMaxLength(200);

@@ -111,6 +111,9 @@ namespace AssetManagement.Infrastructure.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("AnnualYield")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("Area")
                         .HasColumnType("decimal(18,2)");
 
@@ -171,6 +174,9 @@ namespace AssetManagement.Infrastructure.Migrations
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("MarketValue")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -196,6 +202,9 @@ namespace AssetManagement.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal?>("PurchasePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("RentalValuation")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Status")

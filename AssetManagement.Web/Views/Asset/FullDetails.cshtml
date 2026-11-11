@@ -123,6 +123,15 @@
             }
             <div class="col-md-3 col-6"><div class="text-muted small">@fdLabel</div>
                 <div class="text-success fw-semibold">@(fdPrice.HasValue ? "EGP " + fdPrice.Value.ToString("N0") : "—")</div></div>
+            @if (a.RentalValuation.HasValue)
+            {<div class="col-md-3 col-6"><div class="text-muted small">تقييم الإيجار</div>
+                <div class="text-info fw-semibold">EGP @a.RentalValuation.Value.ToString("N0")</div></div>}
+            @if (a.AnnualYield.HasValue)
+            {<div class="col-md-3 col-6"><div class="text-muted small">العائد السنوي</div>
+                <div class="text-info fw-semibold">EGP @a.AnnualYield.Value.ToString("N0")</div></div>}
+            @if (a.MarketValue.HasValue)
+            {<div class="col-md-3 col-6"><div class="text-muted small">القيمة السوقية</div>
+                <div class="text-success fw-semibold">EGP @a.MarketValue.Value.ToString("N0")</div></div>}
             <div class="col-md-3 col-6"><div class="text-muted small">نوع التصرف</div>
                 <span class="badge @(a.AssetType==AssetManagement.Domain.Enums.AssetType.Sale?"bg-success":a.AssetType==AssetManagement.Domain.Enums.AssetType.Rent?"bg-info":"bg-warning text-dark")">
                     @(a.AssetType==AssetManagement.Domain.Enums.AssetType.Sale?"بيع":a.AssetType==AssetManagement.Domain.Enums.AssetType.Rent?"إيجار":"بيع وإيجار")

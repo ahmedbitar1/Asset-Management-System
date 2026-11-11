@@ -140,6 +140,21 @@
                     <div class="text-muted small">@priceLabel</div>
                     <div class="fw-semibold text-success">@(displayPrice.HasValue?"EGP "+displayPrice.Value.ToString("N0"):"\u2014")</div>
                 </div>
+                @if (a.RentalValuation.HasValue)
+                {<div class="col-6">
+                    <div class="text-muted small">تقييم الإيجار</div>
+                    <div class="fw-semibold text-info">EGP @a.RentalValuation.Value.ToString("N0")</div>
+                </div>}
+                @if (a.AnnualYield.HasValue)
+                {<div class="col-6">
+                    <div class="text-muted small">العائد السنوي</div>
+                    <div class="fw-semibold text-info">EGP @a.AnnualYield.Value.ToString("N0")</div>
+                </div>}
+                @if (a.MarketValue.HasValue)
+                {<div class="col-6">
+                    <div class="text-muted small">القيمة السوقية</div>
+                    <div class="fw-semibold text-success">EGP @a.MarketValue.Value.ToString("N0")</div>
+                </div>}
                 @if (!string.IsNullOrEmpty(a.DeedNumber) || !string.IsNullOrEmpty(a.DeedType))
                 {<div class="col-12 col-md-6">
                     <div class="text-muted small">سند الملكية</div>
